@@ -1,23 +1,18 @@
 import React, { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getReports } from '../lib/storage.js';
+import { ASK_CATEGORIES } from '../lib/daily.js';
 import TabBar from '../components/TabBar.jsx';
 
-const CATEGORIES = {
-  career: '💼 事業',
-  love: '❤️ 感情',
-  money: '💰 財運',
-  health: '🏃 健康',
-  social: '👥 人際',
-  yearly: '📅 年度運勢',
-};
+const CATEGORY_ICONS = { career: '💼', love: '❤️', money: '💰', health: '🏃', social: '👥', yearly: '📅' };
+const categoryLabel = (key) => `${CATEGORY_ICONS[key] || '🔮'} ${ASK_CATEGORIES[key]?.name || '問事'}`;
 
 export default function ReportDetail() {
   const [searchParams] = useSearchParams();
   const reportId = searchParams.get('id');
   const reports = useMemo(() => getReports(), []);
   const report = useMemo(() => {
-    return reports.find((r) => r.id === reportId) || reports[0] || null;
+    return reports.find((r) => r.id === reportId) || null;
   }, [reports, reportId]);
 
   if (!report) {
@@ -46,7 +41,7 @@ export default function ReportDetail() {
     <div className="app">
       <div className="page-head">
         <div className="eyebrow">REPORT</div>
-        <h1>{CATEGORIES[report.category] || '🔮 問事'}報告</h1>
+        <h1>{categoryLabel(report.category)}報告</h1>
         <p>{dateStr} · 問題：{report.question}</p>
       </div>
 

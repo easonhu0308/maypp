@@ -85,7 +85,7 @@ export default function Timeline() {
 
       <p className="disclaimer">內容為自我探索與娛樂用途</p>
 
-      <TabBar active="today" />
+      <TabBar active="timeline" />
     </div>
   );
 }

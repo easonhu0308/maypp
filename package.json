@@ -9,6 +9,7 @@
     "preview": "npm run build && wrangler dev --config dist/maypp/wrangler.json",
     "test:chart": "node scripts/test-chart.mjs",
     "test:llm": "node scripts/test-llm-daily.mjs",
+    "test:reports": "node scripts/test-reports.mjs",
     "deploy": "npm run build && wrangler deploy --config dist/maypp/wrangler.json"
   },
   "dependencies": {

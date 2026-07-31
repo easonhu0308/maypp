@@ -26,7 +26,14 @@ export default function Onboarding() {
   ];
 
   const toggleGoal = (g) => {
-    setGoals((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
+    setGoals((prev) => {
+      if (prev.includes(g)) return prev.filter((x) => x !== g);
+      if (prev.length >= 3) {
+        toast.show('最多選 3 個目標，先把心力集中在一小段時間。');
+        return prev;
+      }
+      return [...prev, g];
+    });
   };
 
   const submit = () => {

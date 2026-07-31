@@ -2,17 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getProfile, getCheckins, recentCheckins, addReport } from '../lib/storage.js';
 import { buildAstrolabe, getMingStarNames } from '../lib/astro.js';
-import { buildAskReport } from '../lib/daily.js';
+import { buildAskReport, ASK_CATEGORIES } from '../lib/daily.js';
 import TabBar from '../components/TabBar.jsx';
 
-const CATEGORIES = [
-  { key: 'career', label: '💼 事業', desc: '工作方向、轉職、提案時機' },
-  { key: 'love', label: '❤️ 感情', desc: '關係理解、相處節奏' },
-  { key: 'money', label: '💰 財運', desc: '投資、消費、談錢時機' },
-  { key: 'health', label: '🏃 健康', desc: '作息、身體訊號、調養' },
-  { key: 'social', label: '👥 人際', desc: '朋友、合作、溝通' },
-  { key: 'yearly', label: '📅 年度運勢', desc: '大方向與年度重點' },
-];
+const CATEGORIES = Object.entries(ASK_CATEGORIES).map(([key, v]) => ({
+  key,
+  label: { career: '💼', love: '❤️', money: '💰', health: '🏃', social: '👥', yearly: '📅' }[key] + ` ${v.name}`,
+  desc: { career: '工作方向、轉職、提案時機', love: '關係理解、相處節奏', money: '投資、消費、談錢時機', health: '作息、身體訊號、調養', social: '朋友、合作、溝通', yearly: '大方向與年度重點' }[key],
+}));
 
 export default function Ask() {
   const navigate = useNavigate();

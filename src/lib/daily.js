@@ -122,7 +122,7 @@ const DAY_BRANCH_FOCUS = {
   亥: { palace: '兄弟', area: '同儕與溝通' },
 };
 
-function buildReasoning(star, dayGanzhi, dims) {
+export function buildReasoning(star, dayGanzhi, dims) {
   const branch = dayGanzhi.slice(1);
   const focus = DAY_BRANCH_FOCUS[branch] || { palace: '命宮', area: '整體狀態' };
   const highDim = Object.entries(dims).sort((a, b) => b[1] - a[1])[0];
@@ -250,7 +250,7 @@ export function buildDailyReport(profile, mingStars, recent = [], now = new Date
 }
 
 // --- 問事報告本地模板 ---
-const ASK_CATEGORIES = {
+export const ASK_CATEGORIES = {
   career: { name: '事業', palace: '官祿', tone: '主動出擊前先釐清方向' },
   love: { name: '感情', palace: '夫妻', tone: '先理解自己再理解對方' },
   money: { name: '財運', palace: '財帛', tone: '穩中求進，慢一點沒關係' },

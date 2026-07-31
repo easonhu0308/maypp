@@ -106,6 +106,34 @@ const YI_POOL = [
 const LUCKY_COLORS = ['月白', '黛藍', '杏黃', '松綠', '藕粉', '靛青', '楓紅', '霧灰'];
 const LUCKY_DIRECTIONS = ['東', '南', '西', '北', '東南', '東北', '西南', '西北'];
 
+// 流日宮位對照（簡化版：以日柱地支對應遷移/事業/財帛/感情等生活領域）
+const DAY_BRANCH_FOCUS = {
+  子: { palace: '命宮', area: '自我認識' },
+  丑: { palace: '父母', area: '學習與長輩' },
+  寅: { palace: '福德', area: '內在安定' },
+  卯: { palace: '田宅', area: '家庭與歸屬' },
+  辰: { palace: '官祿', area: '事業與行動' },
+  巳: { palace: '僕役', area: '朋友與合作' },
+  午: { palace: '遷移', area: '外出與變動' },
+  未: { palace: '疾厄', area: '健康與身體' },
+  申: { palace: '財帛', area: '財務與價值' },
+  酉: { palace: '子女', area: '創作與下屬' },
+  戌: { palace: '夫妻', area: '感情與關係' },
+  亥: { palace: '兄弟', area: '同儕與溝通' },
+};
+
+function buildReasoning(star, dayGanzhi, dims) {
+  const branch = dayGanzhi.slice(1);
+  const focus = DAY_BRANCH_FOCUS[branch] || { palace: '命宮', area: '整體狀態' };
+  const highDim = Object.entries(dims).sort((a, b) => b[1] - a[1])[0];
+  const dimName = { career: '事業', love: '感情', money: '財運' }[highDim[0]];
+  return [
+    `今日日柱為${dayGanzhi}，流日能量落在你的「${focus.palace}宮」，對應生活領域是「${focus.area}」。`,
+    star ? `你的命宮主星${star}，讓你在這個領域習慣用「細膩觀察」代替衝動行動。` : '今天的星象組合適合先觀察，再行動。',
+    `三維指引中「${dimName}」分數最高，表示這個領域今天最容易有進展。`,
+  ].join('');
+}
+
 // 打卡標籤 → 「它記得我」的一句話（回應近 7 日打卡內容）
 const TAG_MEMORIES = {
   工作卡關: {
@@ -207,6 +235,8 @@ export function buildDailyReport(profile, mingStars, recent = [], now = new Date
     dayKeyword: pick(rng, DAY_KEYWORDS),
     score,
     lead: pick(rng, LEAD_TEXTS),
+    reasoning: buildReasoning(star, dayGanzhi(now), dims),
+    focusPalace: DAY_BRANCH_FOCUS[dayGanzhi(now).slice(1)]?.palace || '命宮',
     dims,
     advice: pick(rng, ADVICE_TEMPLATES)(star),
     yi: sample(rng, YI_POOL, 3),
@@ -216,5 +246,55 @@ export function buildDailyReport(profile, mingStars, recent = [], now = new Date
       number: int(rng, 1, 9),
       direction: pick(rng, LUCKY_DIRECTIONS),
     },
+  };
+}
+
+// --- 問事報告本地模板 ---
+const ASK_CATEGORIES = {
+  career: { name: '事業', palace: '官祿', tone: '主動出擊前先釐清方向' },
+  love: { name: '感情', palace: '夫妻', tone: '先理解自己再理解對方' },
+  money: { name: '財運', palace: '財帛', tone: '穩中求進，慢一點沒關係' },
+  health: { name: '健康', palace: '疾厄', tone: '身體是最誠實的命盤訊號' },
+  social: { name: '人際', palace: '僕役', tone: '人緣藏在細節裡' },
+  yearly: { name: '年度運勢', palace: '命宮', tone: '大方向對了，小波折不會翻船' },
+};
+
+const ASK_ADVICE = [
+  '把問題具體寫下來，比反覆想十次更有用。',
+  '今天適合先跟信任的人說說看，旁觀者有時比當局者清楚。',
+  '給自己一個「試試看也不虧」的小行動，先打破停滯。',
+  '如果感覺亂，先把睡眠和飲食拉回正軌，其他的會跟著清楚。',
+  '不需要現在就做決定，但可以先收集一個新資訊。',
+];
+
+export function buildAskReport({ category, question, profile, mingStars, recent }) {
+  const cat = ASK_CATEGORIES[category] || ASK_CATEGORIES.yearly;
+  const seed = hashSeed(`${profile.nickname}|${category}|${question || ''}|${(mingStars || []).join('·')}`);
+  const rng = mulberry32(seed);
+  const star = (mingStars || [])[0] || '';
+
+  const tagSummary = [];
+  outer: for (const checkin of recent || []) {
+    for (const tag of checkin.tags || []) {
+      if (TAG_MEMORIES[tag]) {
+        tagSummary.push(TAG_MEMORIES[tag].recall.replace('。', ''));
+        break outer;
+      }
+    }
+  }
+
+  return {
+    id: `r_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    createdAt: new Date().toISOString(),
+    category,
+    categoryName: cat.name,
+    question: question || `${cat.name}方向該怎麼走？`,
+    astrology: [
+      `你的命宮主星${star ? `為${star}` : '組合特殊'}，面對${cat.name}議題時，容易想很多再行動。`,
+      `${cat.palace}宮代表你的${cat.name}能量，今天的建議方向是：${cat.tone}。`,
+      star ? `${star}的細膩會幫你避開冒進，但偶爾也要允許自己「先做再調整」。` : '星象支持你循序漸進，不必一次到位。',
+    ].join(''),
+    memory: tagSummary.length ? `從你最近的打卡來看：${tagSummary[0]}。` : '最近你還沒有相關打卡，記錄心情會讓建議更貼近你。',
+    actions: sample(rng, ASK_ADVICE, 3),
   };
 }

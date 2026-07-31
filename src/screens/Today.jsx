@@ -23,12 +23,24 @@ export default function Today() {
     return () => { alive = false; };
   }, [profile, mingStars, now]);
 
+  const dimText = (key, score) => {
+    if (key === 'career') return score >= 80 ? '今天很適合主動推進' : score >= 65 ? '穩紮穩打會有進展' : '先整理資訊，明天再衝';
+    if (key === 'love') return score >= 80 ? '把話說開會讓關係更靠近' : score >= 65 ? '平平淡淡也是一種滋養' : '給彼此一點空間';
+    return score >= 80 ? '有機會進帳，適合主動談' : score >= 65 ? '守成就很好' : '避免衝動支出';
+  };
+
   return (
     <div className="app">
       <div className="page-head">
         <div className="eyebrow">DAILY · {formatDateLabel(now)}{report.source === 'llm' ? ' · AI' : ''}</div>
         <h1>{report.greeting}，{profile.nickname}</h1>
-        <p>{report.dayGanzhi}日 · {report.dayKeyword}</p>
+        <p>{report.dayGanzhi}日 · {report.dayKeyword} · 流日重點：{report.focusPalace || '命宮'}宮</p>
+      </div>
+
+      <div className="card" style={{ borderColor: 'rgba(139,92,246,.35)', background: 'rgba(139,92,246,.08)' }}>
+        <h3>🔮 今天為什麼是這樣</h3>
+        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 10 }}>{report.reasoning}</p>
+        <Link className="btn btn-ghost btn-sm" to="/chart" style={{ fontSize: 12 }}>看看我的命盤 →</Link>
       </div>
 
       <div className="card glow">
@@ -40,6 +52,15 @@ export default function Today() {
             <div className="dim"><span className="name">感情</span><div className="bar"><b className="b-love" style={{ width: `${report.dims.love}%` }}></b></div><span className="val">{report.dims.love}</span></div>
             <div className="dim"><span className="name">財運</span><div className="bar"><b className="b-money" style={{ width: `${report.dims.money}%` }}></b></div><span className="val">{report.dims.money}</span></div>
           </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>🌿 三維指引</h3>
+        <div style={{ margin: '10px 0', fontSize: 14, lineHeight: 1.7 }}>
+          <p><strong style={{ color: '#d4b5ff' }}>事業：</strong>{dimText('career', report.dims.career)}。</p>
+          <p><strong style={{ color: '#d4b5ff' }}>感情：</strong>{dimText('love', report.dims.love)}。</p>
+          <p><strong style={{ color: '#d4b5ff' }}>財運：</strong>{dimText('money', report.dims.money)}。</p>
         </div>
       </div>
 

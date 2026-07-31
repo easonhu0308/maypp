@@ -7,6 +7,7 @@ import Today from './screens/Today.jsx';
 import Checkin from './screens/Checkin.jsx';
 import Reports from './screens/Reports.jsx';
 import ReportDetail from './screens/ReportDetail.jsx';
+import Ask from './screens/Ask.jsx';
 import About from './screens/About.jsx';
 import Timeline from './screens/Timeline.jsx';
 import Privacy from './screens/Privacy.jsx';
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/checkin" element={<RequireProfile><Checkin /></RequireProfile>} />
         <Route path="/reports" element={<RequireProfile><Reports /></RequireProfile>} />
         <Route path="/report-detail" element={<RequireProfile><ReportDetail /></RequireProfile>} />
+        <Route path="/ask" element={<RequireProfile><Ask /></RequireProfile>} />
         <Route path="/about" element={<RequireProfile><About /></RequireProfile>} />
         <Route path="/subscribe" element={<Navigate to="/about" replace />} />
         <Route path="/timeline" element={<RequireProfile><Timeline /></RequireProfile>} />

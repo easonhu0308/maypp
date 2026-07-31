@@ -4,8 +4,10 @@ import { getReports } from '../lib/storage.js';
 import { ASK_CATEGORIES } from '../lib/daily.js';
 import TabBar from '../components/TabBar.jsx';
 
-const CATEGORY_ICONS = { career: '💼', love: '❤️', money: '💰', health: '🏃', social: '👥', yearly: '📅' };
-const categoryLabel = (key) => `${CATEGORY_ICONS[key] || '🔮'} ${ASK_CATEGORIES[key]?.name || '問事'}`;
+const categoryLabel = (key) => {
+  const c = ASK_CATEGORIES[key];
+  return c ? `${c.icon} ${c.name}` : '🔮 問事';
+};
 
 export default function ReportDetail() {
   const [searchParams] = useSearchParams();

@@ -7,8 +7,8 @@ import TabBar from '../components/TabBar.jsx';
 
 const CATEGORIES = Object.entries(ASK_CATEGORIES).map(([key, v]) => ({
   key,
-  label: { career: '💼', love: '❤️', money: '💰', health: '🏃', social: '👥', yearly: '📅' }[key] + ` ${v.name}`,
-  desc: { career: '工作方向、轉職、提案時機', love: '關係理解、相處節奏', money: '投資、消費、談錢時機', health: '作息、身體訊號、調養', social: '朋友、合作、溝通', yearly: '大方向與年度重點' }[key],
+  label: `${v.icon} ${v.name}`,
+  desc: v.desc,
 }));
 
 export default function Ask() {

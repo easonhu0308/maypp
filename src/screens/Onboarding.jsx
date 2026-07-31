@@ -48,7 +48,7 @@ export default function Onboarding() {
       // iztro 需要二元性別以排大限順逆；「其他／不透露」以「男」計算
       gender: genderRaw === '女' ? '女' : '男',
       consents: { terms: agreeTerms, data: agreeData, push: agreePush },
-      goals: goals.slice(0, 3),
+      goals,
       createdAt: toISODate(),
     });
     navigate('/chart');

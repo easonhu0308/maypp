@@ -59,9 +59,8 @@ export function saveReports(reports) {
 }
 
 export function addReport(report) {
-  const list = getReports();
-  list.unshift(report);
-  write(KEY_REPORTS, list.slice(0, 50));
+  const list = [report, ...getReports()].slice(0, 50);
+  write(KEY_REPORTS, list);
   return list;
 }
 

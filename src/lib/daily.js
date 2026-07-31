@@ -251,12 +251,12 @@ export function buildDailyReport(profile, mingStars, recent = [], now = new Date
 
 // --- 問事報告本地模板 ---
 export const ASK_CATEGORIES = {
-  career: { name: '事業', palace: '官祿', tone: '主動出擊前先釐清方向' },
-  love: { name: '感情', palace: '夫妻', tone: '先理解自己再理解對方' },
-  money: { name: '財運', palace: '財帛', tone: '穩中求進，慢一點沒關係' },
-  health: { name: '健康', palace: '疾厄', tone: '身體是最誠實的命盤訊號' },
-  social: { name: '人際', palace: '僕役', tone: '人緣藏在細節裡' },
-  yearly: { name: '年度運勢', palace: '命宮', tone: '大方向對了，小波折不會翻船' },
+  career: { name: '事業', palace: '官祿', tone: '主動出擊前先釐清方向', icon: '💼', desc: '工作方向、轉職、提案時機' },
+  love: { name: '感情', palace: '夫妻', tone: '先理解自己再理解對方', icon: '❤️', desc: '關係理解、相處節奏' },
+  money: { name: '財運', palace: '財帛', tone: '穩中求進，慢一點沒關係', icon: '💰', desc: '投資、消費、談錢時機' },
+  health: { name: '健康', palace: '疾厄', tone: '身體是最誠實的命盤訊號', icon: '🏃', desc: '作息、身體訊號、調養' },
+  social: { name: '人際', palace: '僕役', tone: '人緣藏在細節裡', icon: '👥', desc: '朋友、合作、溝通' },
+  yearly: { name: '年度運勢', palace: '命宮', tone: '大方向對了，小波折不會翻船', icon: '📅', desc: '大方向與年度重點' },
 };
 
 const ASK_ADVICE = [

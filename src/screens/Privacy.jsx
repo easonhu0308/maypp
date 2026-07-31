@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   getProfile,
   getCheckins,
+  getReports,
   getSettings,
   saveSettings,
   exportAllData,
@@ -24,6 +25,7 @@ export default function Privacy() {
   const toast = useToast();
   const profile = getProfile();
   const checkins = getCheckins();
+  const reports = getReports();
   const [settings, setSettings] = useState(() => {
     const s = getSettings();
     return { aiDaily: true, ...s, push: profile.consents?.push ?? s.push };
@@ -66,8 +68,19 @@ export default function Privacy() {
       <div className="card glow">
         <div className="row"><span>✦ 我的命盤資料</span><span className="sub">{formatDots(profile.solarDate)} {timeSlotName(profile.timeIndex)}時</span></div>
         <div className="row"><span>🌿 生活分享紀錄</span><span className="sub">{checkins.length} 則打卡</span></div>
-        <div className="row" style={{ border: 'none' }}><span>❖ 已購報告</span><span className="sub">0 份</span></div>
+        <div className="row" style={{ border: 'none' }}><span>❖ 問事報告</span><span className="sub">{reports.length} 份</span></div>
       </div>
+
+      {profile.goals?.length > 0 && (
+        <div className="card">
+          <h3>我的身心靈目標</h3>
+          <div className="chips mt8">
+            {profile.goals.map((g) => (
+              <span key={g} className="chip on">{g}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h3>我的資料，我做主</h3>

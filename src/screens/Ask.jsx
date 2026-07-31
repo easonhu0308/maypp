@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getProfile, getCheckins, recentCheckins, addReport } from '../lib/storage.js';
 import { buildAstrolabe, getMingStarNames } from '../lib/astro.js';
 import { buildAskReport } from '../lib/daily.js';
@@ -16,12 +16,14 @@ const CATEGORIES = [
 
 export default function Ask() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const profile = getProfile();
   const astrolabe = useMemo(() => buildAstrolabe(profile), [profile]);
   const mingStars = useMemo(() => getMingStarNames(astrolabe), [astrolabe]);
   const recent = useMemo(() => recentCheckins(7), []);
 
-  const [category, setCategory] = useState('career');
+  const initialCategory = searchParams.get('category') || 'career';
+  const [category, setCategory] = useState(CATEGORIES.some((c) => c.key === initialCategory) ? initialCategory : 'career');
   const [question, setQuestion] = useState('');
 
   const handleSubmit = (e) => {

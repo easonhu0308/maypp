@@ -2,11 +2,18 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "maypp",
   "compatibility_date": "2026-07-20",
+  "main": "worker/index.js",
   "observability": {
     "enabled": true
   },
   "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "MOONSHOT_MODEL": "kimi-k3",
+    "MOONSHOT_BASE": "https://api.moonshot.ai/v1"
   },
   "compatibility_flags": [
     "nodejs_compat"

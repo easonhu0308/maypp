@@ -16,7 +16,7 @@ export default function Timeline() {
       <div className="page-head">
         <div className="eyebrow">JOURNEY</div>
         <h1>我們一起走的路</h1>
-        <p>紫微拾光記得你說過的事，也記得你是怎麼一步步走過來的。</p>
+        <p>懂你紫微記得你說過的事，也記得你是怎麼一步步走過來的。</p>
       </div>
 
       <div className="card glow mb16">
@@ -41,7 +41,7 @@ export default function Timeline() {
           </div>
         ))}
         <div className="tl-item">
-          <div className="date">{formatShortLabel(profile.createdAt)} · 加入紫微拾光</div>
+          <div className="date">{formatShortLabel(profile.createdAt)} · 加入懂你紫微</div>
           <div className="body">
             排出命盤：命宮{mingStars.length ? mingStars.join('') : '無主星'}，{profile.solarDate} 的故事從這裡開始。
           </div>

@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "npm run build && wrangler dev",
+    "preview": "npm run build && wrangler dev --config dist/maypp/wrangler.json",
     "test:chart": "node scripts/test-chart.mjs",
-    "deploy": "npm run build && wrangler deploy"
+    "test:llm": "node scripts/test-llm-daily.mjs",
+    "deploy": "npm run build && wrangler deploy --config dist/maypp/wrangler.json"
   },
   "dependencies": {
     "iztro": "^2.4.5",

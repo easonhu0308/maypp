@@ -8,7 +8,7 @@ export default function About() {
       <div className="page-head center" style={{ paddingTop: 22 }}>
         <div style={{ fontSize: 30 }}>✦</div>
         <div className="eyebrow" style={{ marginTop: 4 }}>ABOUT</div>
-        <h1>關於紫微拾光</h1>
+        <h1>關於懂你紫微</h1>
         <p>一個做給朋友的免費小作品。</p>
       </div>
 
@@ -19,7 +19,7 @@ export default function About() {
 
       <div className="card">
         <h3>🔒 你的資料在哪裡？</h3>
-        <p>全部只存在<strong style={{ color: 'var(--gold-soft)' }}>你這支手機</strong>裡（瀏覽器本機儲存）。沒有帳號、沒有伺服器、什麼都不上傳。想刪掉？到「我的」一鍵清除，乾乾淨淨。</p>
+        <p>命盤與打卡只存在<strong style={{ color: 'var(--gold-soft)' }}>你這支手機</strong>裡（瀏覽器本機儲存），沒有帳號。開啟「AI 雲端日報」時，命宮主星與打卡摘要會送到雲端生成文字——可隨時在「我的」關閉，關了完全不連網。想刪掉？到「我的」一鍵清除，乾乾淨淨。</p>
       </div>
 
       <div className="card">
@@ -29,11 +29,11 @@ export default function About() {
 
       <div className="card">
         <h3>🌿 重要的小事</h3>
-        <p>紫微拾光是自我探索與娛樂用途，不提供醫療、心理治療或投資建議。如果你最近真的很累、很辛苦了，請找專業的人陪你：安心專線 1925 · 生命線 1995 · 張老師 1980。</p>
+        <p>懂你紫微是自我探索與娛樂用途，不提供醫療、心理治療或投資建議。如果你最近真的很累、很辛苦了，請找專業的人陪你：安心專線 1925 · 生命線 1995 · 張老師 1980。</p>
       </div>
 
       <Link className="btn btn-gold" to="/today">回到今日日報 ☀</Link>
-      <p className="disclaimer">紫微拾光 · 朋友版 · 內容為自我探索與娛樂用途</p>
+      <p className="disclaimer">懂你紫微 · 朋友版 · 內容為自我探索與娛樂用途</p>
 
       <TabBar active="reports" />
     </div>

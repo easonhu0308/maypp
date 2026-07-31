@@ -14,6 +14,7 @@ import Toast, { useToast } from '../components/Toast.jsx';
 
 const TOGGLES = [
   { key: 'personalize', title: '個人化內容生成', sub: '使用打卡與測驗資料讓日報更貼近你' },
+  { key: 'aiDaily', title: 'AI 雲端日報', sub: '命盤主星與打卡摘要會傳到雲端（Moonshot Kimi）生成日報；關閉則完全離線' },
   { key: 'push', title: '每日運勢推播', sub: '每天 08:00，可調整或關閉' },
   { key: 'stats', title: '匿名統計改善服務', sub: '僅彙總數據，不含可識別內容' },
 ];
@@ -25,7 +26,7 @@ export default function Privacy() {
   const checkins = getCheckins();
   const [settings, setSettings] = useState(() => {
     const s = getSettings();
-    return { ...s, push: profile.consents?.push ?? s.push };
+    return { aiDaily: true, ...s, push: profile.consents?.push ?? s.push };
   });
 
   const joinDays = Math.max(1, daysBetween(profile.createdAt, toISODate()) + 1);
@@ -41,7 +42,7 @@ export default function Privacy() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ziwei-light-export-${toISODate()}.json`;
+    a.download = `dongni-ziwei-export-${toISODate()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.show('已匯出你的全部資料 ✦');
@@ -95,7 +96,7 @@ export default function Privacy() {
         <p className="note mt8">刪除會立即移除此裝置上的所有資料（出生資料、打卡內容與設定），無法復原。</p>
       </div>
 
-      <p className="disclaimer">紫微拾光為自我探索與娛樂用途 · 不提供醫療、心理治療或投資建議</p>
+      <p className="disclaimer">懂你紫微為自我探索與娛樂用途 · 不提供醫療、心理治療或投資建議</p>
 
       <TabBar active="privacy" />
       <Toast msg={toast.msg} />

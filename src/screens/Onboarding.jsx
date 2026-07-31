@@ -36,8 +36,8 @@ export default function Onboarding() {
     <div className="app">
       <div className="page-head center" style={{ paddingTop: 26 }}>
         <div style={{ fontSize: 34, letterSpacing: '.1em' }}>✦</div>
-        <div className="eyebrow" style={{ marginTop: 6 }}>ZIWEI LIGHT</div>
-        <h1 style={{ fontSize: 28 }}>紫微拾光</h1>
+        <div className="eyebrow" style={{ marginTop: 6 }}>DONGNI ZIWEI</div>
+        <h1 style={{ fontSize: 28 }}>懂你紫微</h1>
         <p>排一張屬於你的命盤，<br />開始一段越來越懂你的每日陪伴。</p>
       </div>
 

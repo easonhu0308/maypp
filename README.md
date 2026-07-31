@@ -1,24 +1,27 @@
-# 紫微拾光 ZIWEI LIGHT（MVP 原型）
+# 懂你紫微 DONGNI ZIWEI（MVP 原型）
 
 紫微斗數 × 正向心理學的每日陪伴 App 原型。以 `ziwei-mvp/` 靜態 mockup 為視覺與文案藍本，
 改為 **可實際運行** 的 React 單頁應用：命盤由 [iztro](https://github.com/SylarLong/iztro) 真實排出，
-每日日報由本地決定性模板引擎產生（同一天結果恆定），資料全部存在瀏覽器 localStorage，無後端。
+每日日報由 Cloudflare Worker 代理的 **Moonshot Kimi LLM** 產生（未設 key 或斷線時降級為本地決定性模板引擎），
+資料全部存在瀏覽器 localStorage，無自有資料庫。
 
 ## 安裝與執行
 
 ```bash
 npm install        # 安裝依賴
-npm run dev        # 開發伺服器（預設 http://localhost:5173）
-npm run build      # 產出正式版到 dist/
-npm run preview    # 預覽正式版
+npm run dev        # 開發伺服器（預設 http://localhost:5173，/api 由插件在本機跑 worker）
+npm run build      # 產出正式版到 dist/（client/ + worker）
+npm run preview    # 預覽正式版（build + wrangler dev）
+npm run deploy     # 部署到 Cloudflare Workers（build + wrangler deploy）
 npm run test:chart # 驗證 iztro 排盤（scripts/test-chart.mjs）
+npm run test:llm   # 驗證 LLM 日報 prompt/正規化/降級（scripts/test-llm-daily.mjs）
 ```
 
 需求：Node 18+（開發時使用 Node 24 驗證）。首次造訪若無個人資料，會自動導向「建立命盤」。
 
 ## 技術棧
 
-Vite + React 18（plain JS）+ react-router-dom v6（HashRouter）+ iztro。無 UI 框架、無後端。
+Vite + React 18（plain JS）+ react-router-dom v6（HashRouter）+ iztro + Cloudflare Workers（@cloudflare/vite-plugin）。無 UI 框架、無自有資料庫。
 
 ## 架構
 
@@ -31,10 +34,14 @@ src/
 │   ├── time.js           時辰對照（子=0 … 亥=11 → iztro timeIndex）、日期格式化
 │   ├── astro.js          iztro 排盤封裝、4×4 宮位盤的地支佈局、星曜行整理
 │   ├── geju.js           「一句話看懂你的格局」：命宮主星組合查表（8 組合 + 單星 + 通用兜底）
-│   └── daily.js          ★ 本地日報模板引擎（LLM 接入點，見下）
+│   ├── daily.js          本地日報模板引擎（AI 日報失效時的降級方案）
+│   └── llmDaily.js       ★ AI 雲端日報協調層（日缓存＋降級，見下）
 ├── components/           TabBar（底部導航）、Toast
 └── screens/              Onboarding / Chart / Today / Checkin / Reports /
                           ReportDetail / Subscribe / Timeline / Privacy
+worker/
+└── index.js              ★ Cloudflare Worker：/api/daily 代理 Moonshot Kimi、
+                            /api/health 狀態、其餘轉靜態資產（SPA）
 ```
 
 ### 資料存在哪裡（全部 localStorage）
@@ -43,7 +50,8 @@ src/
 | --- | --- |
 | `ziwei.profile` | 暱稱、國曆生日、timeIndex、性別（`genderRaw` 保留原始選項；iztro 用的 `gender` 為二元，「其他／不透露」以「男」計算）、三項同意、建立日期 |
 | `ziwei.checkins` | 打卡陣列：`{ date, mood(1–5), emoji, tags[], text }` |
-| `ziwei.settings` | 隱私頁三個開關（個人化／推播／匿名統計） |
+| `ziwei.settings` | 隱私頁四個開關（個人化／AI 雲端日報／推播／匿名統計） |
+| `ziwei.dailyLLM` | 當日 AI 日報快取（輸入簽名不符即重取） |
 
 「我的與隱私」頁可一鍵匯出全部資料（JSON 下載）、確認後永久刪除（清空並回到 onboarding）。
 
@@ -56,17 +64,32 @@ src/
 - 「給你的一句話」會**回應近 7 日打卡標籤**（如「工作卡關」→ 引用並鼓勵），無打卡時用通用正向文案。
 - 硬規則：全部文案皆正向框架，無負面斷言。
 
-### LLM 接入點
+### AI 雲端日報（2026-07-28 接上）
 
-未來接真實 LLM 日報 API，**只需改 `src/lib/daily.js` 的 `buildDailyReport()`**：
-改為呼叫後端（傳 profile、命宮主星、近 7 日打卡），回傳相同結構的物件，
-`src/screens/Today.jsx` 完全不用動。
+- `worker/index.js`：`POST /api/daily` 把命盤主星＋近 7 日打卡摘要送 Moonshot Kimi
+  （OpenAI 相容端點，模型預設 `kimi-k2.5`，可用 vars `MOONSHOT_MODEL` 改），回傳與本地日報同結構的 JSON；
+  `GET /api/health` 回報 key 是否已設定。
+- 前端 `src/lib/llmDaily.js`：先秒開本地模板日報，背景取 LLM 版後無縫替換（Today 標題列會多出 `· AI` 標記）；
+  同一份輸入一天只呼叫一次（`ziwei.dailyLLM` 日缓存）。
+- 降級：沒設 key / 逾時 / 上游錯誤 / 格式不符 → 靜默使用本地模板引擎，App 永遠可用。
+- 隱私：隱私頁新增「AI 雲端日報」開關（預設開），關閉則完全不連網；
+  關閉「個人化內容生成」時打卡內容不送上雲端。
+- API key 只存在 Cloudflare secret，前端拿不到：
+  - 本地：`cp .dev.vars.example .dev.vars` 填入 `MOONSHOT_API_KEY` → `npm run dev`
+  - 正式：`npm run build` 後 `npx wrangler secret put MOONSHOT_API_KEY --config dist/maypp/wrangler.json`
+- 部署走 @cloudflare/vite-plugin 產生的設定：`npm run preview` / `npm run deploy`
+  （＝ build 後對 `dist/maypp/wrangler.json` 執行 wrangler；直接對根目錄 wrangler.jsonc 跑 wrangler 是錯的）。
+- ⚠️ /api/daily 目前無身分驗證，知道網址的人都能呼叫（會耗 Moonshot 額度）。
+  朋友圈 MVP 可接受；對外開放前應加 Turnstile 或 rate limit。
 
 ## 已驗證
 
 - `node scripts/test-chart.mjs`：12 宮、唯一命宮、繁中星曜名（輸出見 scripts 註解）。
-- `npm run build` 成功（iztro 資料表使 bundle 約 643 kB，MVP 階段未做 code-split）。
-- `npm run dev` 啟動並回應 HTTP 200 後關閉。
+- `node scripts/test-llm-daily.mjs`：18 項（prompt 組裝、JSON 萃取、正規化 clamp、本地降級恆定）。
+- `npm run build` 成功（iztro 資料表使 bundle 約 671 kB，MVP 階段未做 code-split）。
+- `npm run dev` 啟動並回應 HTTP 200；`/api/health` 經插件正確路由到 worker。
+- `npm run preview`（wrangler dev）：`/` 與 SPA fallback 200、`POST /api/daily` 無 key 時 501、
+  `GET /api/daily` 405（2026-07-28 於 Node 24 驗證；LLM 實呼待正式 key 測試）。
 
 ## 與 mockup 的差異
 

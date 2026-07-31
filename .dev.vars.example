@@ -1,0 +1,6 @@
+# 本地開發用 secrets（複製為 .dev.vars 並填入真實 key；.dev.vars 已被 gitignore）
+# 申請：https://platform.moonshot.ai → API Key
+MOONSHOT_API_KEY=sk-填入你的-key
+# 可選：覆寫模型與端點（預設 kimi-k2.5 / https://api.moonshot.ai/v1）
+# MOONSHOT_MODEL=kimi-k2.5
+# MOONSHOT_BASE=https://api.moonshot.ai/v1

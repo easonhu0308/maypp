@@ -59,9 +59,9 @@ export default function Reports() {
       ))}
 
       <div className="card center" style={{ background: 'rgba(216,181,128,.07)' }}>
-        <p className="lead">紫微拾光是做給朋友的免費小作品</p>
-        <p>沒有訂閱、沒有內購，資料只存在你的手機裡。</p>
-        <Link className="btn btn-ghost btn-sm mt8" to="/about">關於紫微拾光</Link>
+        <p className="lead">懂你紫微是做給朋友的免費小作品</p>
+        <p>沒有訂閱、沒有內購；命盤與打卡存在你手機，「AI 雲端日報」可隨時關閉。</p>
+        <Link className="btn btn-ghost btn-sm mt8" to="/about">關於懂你紫微</Link>
       </div>
 
       <p className="disclaimer">內容為自我探索與娛樂用途</p>

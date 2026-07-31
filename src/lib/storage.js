@@ -41,7 +41,7 @@ export function addCheckin(entry) {
 
 // --- 隱私 / 偏好開關 ---
 export function getSettings() {
-  return read(KEY_SETTINGS, { personalize: true, push: false, stats: false });
+  return read(KEY_SETTINGS, { personalize: true, push: false, stats: false, aiDaily: true });
 }
 
 export function saveSettings(settings) {
@@ -51,7 +51,7 @@ export function saveSettings(settings) {
 // --- 匯出 / 刪除 ---
 export function exportAllData() {
   return {
-    app: '紫微拾光 ZIWEI LIGHT (MVP prototype)',
+    app: '懂你紫微 DONGNI ZIWEI (MVP prototype)',
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
     checkins: getCheckins(),

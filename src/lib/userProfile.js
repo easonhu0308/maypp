@@ -7,7 +7,7 @@
 import { getSettings, getCheckins, getReports, getProfile } from './storage.js';
 import { ASK_CATEGORIES } from './daily.js';
 
-const STORAGE_KEY = '***';
+const STORAGE_KEY = 'ziwei.…ile';
 const UPDATE_EVERY = 5;
 const FETCH_TIMEOUT_MS = 70000;
 

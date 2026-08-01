@@ -2,7 +2,7 @@
 
 紫微斗數 × 正向心理學的每日陪伴 App 原型。以 `ziwei-mvp/` 靜態 mockup 為視覺與文案藍本，
 改為 **可實際運行** 的 React 單頁應用：命盤由 [iztro](https://github.com/SylarLong/iztro) 真實排出，
-每日日報由 Cloudflare Worker 代理的 **Moonshot Kimi LLM** 產生（未設 key 或斷線時降級為本地決定性模板引擎），
+每日日報由 Cloudflare Worker 產生（線上走 **Workers AI qwen3**、本機開發可走 Moonshot Kimi；未設 key 或斷線時降級為本地決定性模板引擎），
 資料全部存在瀏覽器 localStorage，無自有資料庫。
 
 ## 安裝與執行
@@ -40,8 +40,8 @@ src/
 └── screens/              Onboarding / Chart / Today / Checkin / Reports /
                           ReportDetail / Subscribe / Timeline / Privacy
 worker/
-└── index.js              ★ Cloudflare Worker：/api/daily 代理 Moonshot Kimi、
-                            /api/health 狀態、其餘轉靜態資產（SPA）
+└── index.js              ★ Cloudflare Worker：/api/daily 日報、/api/chart-report 深度解讀
+                            （上游 Workers AI 優先、Moonshot HTTP 備用）、/api/health、靜態 SPA
 ```
 
 ### 資料存在哪裡（全部 localStorage）
@@ -64,22 +64,25 @@ worker/
 - 「給你的一句話」會**回應近 7 日打卡標籤**（如「工作卡關」→ 引用並鼓勵），無打卡時用通用正向文案。
 - 硬規則：全部文案皆正向框架，無負面斷言。
 
-### AI 雲端日報（2026-07-28 接上）
+### AI 雲端日報（2026-08-01 起：線上 Workers AI）
 
-- `worker/index.js`：`POST /api/daily` 把命盤主星＋近 7 日打卡摘要送 Moonshot Kimi
-  （OpenAI 相容端點，模型預設 `kimi-k2.5`，可用 vars `MOONSHOT_MODEL` 改），回傳與本地日報同結構的 JSON；
-  `GET /api/health` 回報 key 是否已設定。
+- **上游分兩層**（`worker/index.js` 的 `callLlm()`）：
+  - 有 `AI` binding（線上）→ **Cloudflare Workers AI `@cf/qwen/qwen3-30b-a3b-fp8`**（免費額度、低延遲）。
+    為什麼不是 Kimi：api.kimi.com 對 serverless 出口回 403 JS 挑戰頁、api.moonshot.ai 直接掛起，
+    兩者都是 Cloudflare 前門且拒服務 Workers 流量（2026-08-01 實測）。
+  - 無 binding（本機開發）→ Moonshot HTTP（`MOONSHOT_BASE`/`MOONSHOT_MODEL` vars 可改），
+    本地 preview 可用真 Kimi 日報（`.dev.vars` 填 key）。
+- `POST /api/daily` 把命盤主星＋近 7 日打卡摘要產生日報 JSON（另有 `POST /api/chart-report` 深度命盤解讀）；
+  `GET /api/health` 回報 `llmBackend`（workers-ai | moonshot-http | none）。
 - 前端 `src/lib/llmDaily.js`：先秒開本地模板日報，背景取 LLM 版後無縫替換（Today 標題列會多出 `· AI` 標記）；
   同一份輸入一天只呼叫一次（`ziwei.dailyLLM` 日缓存）。
 - 降級：沒設 key / 逾時 / 上游錯誤 / 格式不符 → 靜默使用本地模板引擎，App 永遠可用。
 - 隱私：隱私頁新增「AI 雲端日報」開關（預設開），關閉則完全不連網；
   關閉「個人化內容生成」時打卡內容不送上雲端。
-- API key 只存在 Cloudflare secret，前端拿不到：
-  - 本地：`cp .dev.vars.example .dev.vars` 填入 `MOONSHOT_API_KEY` → `npm run dev`
-  - 正式：`npm run build` 後 `npx wrangler secret put MOONSHOT_API_KEY --config dist/maypp/wrangler.json`
+- Moonshot key（本機用）只存在 `.dev.vars`（本機）與 Cloudflare secret（線上 fallback），前端拿不到。
 - 部署走 @cloudflare/vite-plugin 產生的設定：`npm run preview` / `npm run deploy`
   （＝ build 後對 `dist/maypp/wrangler.json` 執行 wrangler；直接對根目錄 wrangler.jsonc 跑 wrangler 是錯的）。
-- ⚠️ /api/daily 目前無身分驗證，知道網址的人都能呼叫（會耗 Moonshot 額度）。
+- ⚠️ /api/daily 目前無身分驗證，知道網址的人都能呼叫（會耗 Workers AI 免費額度）。
   朋友圈 MVP 可接受；對外開放前應加 Turnstile 或 rate limit。
 
 ## 已驗證

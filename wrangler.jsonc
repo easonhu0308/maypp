@@ -12,7 +12,7 @@
     "not_found_handling": "single-page-application"
   },
   "vars": {
-    "MOONSHOT_MODEL": "kimi-k3",
+    "MOONSHOT_MODEL": "kimi-k2.6",
     "MOONSHOT_BASE": "https://api.moonshot.ai/v1"
   },
   "compatibility_flags": [

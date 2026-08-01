@@ -7,7 +7,7 @@
 
 const DEFAULT_BASE = 'https://api.moonshot.ai/v1';
 const DEFAULT_MODEL = 'kimi-k2.5';
-const UPSTREAM_TIMEOUT_MS = 25000;
+const UPSTREAM_TIMEOUT_MS = 60000;
 // 深度命盤解讀 prompt 大（十二宮全文＋2500 tokens），Kimi 生成常超過 25 秒，獨立放寬到 60 秒
 export const CHART_UPSTREAM_TIMEOUT_MS = 60000;
 

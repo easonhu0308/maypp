@@ -10,7 +10,7 @@ import { dayGanzhi } from './daily.js';
 import { toISODate } from './time.js';
 
 const CACHE_KEY = 'ziwei.dailyLLM';
-const FETCH_TIMEOUT_MS = 15000;
+const FETCH_TIMEOUT_MS = 65000;
 
 // 輸入簽名：同一天、同一份資料才命中快取；有新打卡就重新生成
 function signature(profile, mingStars, recent, iso) {

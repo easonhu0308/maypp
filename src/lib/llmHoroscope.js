@@ -10,7 +10,7 @@ import { getSettings, recentCheckins } from './storage.js';
 import { buildHoroscopePayload } from './astro.js';
 import { summarizeCheckins } from './daily.js';
 
-const CACHE_KEY = '***';
+const CACHE_KEY = 'ziwei.horoscopeLLM';
 // 必須大於 worker 的上游逾時（60s）
 export const FETCH_TIMEOUT_MS = 70000;
 

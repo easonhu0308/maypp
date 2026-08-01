@@ -140,7 +140,7 @@ export default function Chart() {
         <div className="card" style={{ borderStyle: 'dashed' }}>
           <h3>✨ 正在為你細讀整張命盤…</h3>
           <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>
-            AI 正在逐一解析你的十二宮與目前大限，第一次生成約需 30–60 秒。先看看上面的格局，深度解讀馬上送到。
+            AI 正在逐一解析你的十二宮與目前大限，第一次生成約需 30–60 秒。先看看上面的格局，深度解讀馬上送到 <span className="loading-dots"><i /><i /><i /></span>
           </p>
         </div>
       )}
@@ -181,7 +181,7 @@ export default function Chart() {
 
       {!horo && horoLoading && (
         <div className="card" style={{ borderStyle: 'dashed' }}>
-          <p className="lead" style={{ fontSize: 13, margin: 0 }}>📅 今年與本月的運勢解讀生成中…</p>
+          <p className="lead" style={{ fontSize: 13, margin: 0 }}>📅 今年與本月的運勢解讀生成中 <span className="loading-dots"><i /><i /><i /></span></p>
         </div>
       )}
 

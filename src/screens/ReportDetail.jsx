@@ -117,7 +117,7 @@ export default function ReportDetail() {
       {upgrading && (
         <div className="card" style={{ borderStyle: 'dashed' }}>
           <p className="lead" style={{ fontSize: 13, margin: 0 }}>
-            ✨ AI 正在細讀你的命盤與問題，深度解讀約需 15–30 秒，會自動更新下方內容…
+            ✨ AI 正在細讀你的命盤與問題，深度解讀約需 15–30 秒，會自動更新下方內容 <span className="loading-dots"><i /><i /><i /></span>
           </p>
         </div>
       )}
@@ -165,7 +165,7 @@ export default function ReportDetail() {
             {t.role === 'user' ? '你：' : '✦ '}{t.content}
           </p>
         ))}
-        {sending && <p className="note" style={{ margin: '4px 0' }}>✨ 思考中…</p>}
+        {sending && <p className="note" style={{ margin: '4px 0' }}>✨ 思考中 <span className="loading-dots"><i /><i /><i /></span></p>}
         {!aiOn ? (
           <p className="note mt8">AI 雲端功能目前關閉，到「我的與隱私」開啟後就能追問</p>
         ) : userTurns >= MAX_CHAT_TURNS ? (
@@ -174,7 +174,7 @@ export default function ReportDetail() {
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <input
               className="input"
-              style={{ flex: 1, padding: '10px 13px' }}
+              style={{ flex: 1, width: 'auto', minWidth: 0, padding: '10px 13px' }}
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}

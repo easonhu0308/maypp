@@ -29,6 +29,8 @@ check('monthly 有干支與四化', Boolean(payload.scopeInfo.monthly.stem) && p
 check('yearly 命宮落宮有值且為合法宮位', typeof payload.scopeInfo.yearly.soulNatalPalace === 'string' && payload.scopeInfo.yearly.soulNatalPalace.length > 0);
 check('monthly 命宮落宮有值', typeof payload.scopeInfo.monthly.soulNatalPalace === 'string' && payload.scopeInfo.monthly.soulNatalPalace.length > 0);
 check('scope=yearly 只有 yearly', !buildHoroscopePayload(profile, 'yearly', now).scopeInfo.monthly);
+check('yearly 國曆標籤正確', payload.scopeInfo.yearly.label === '2026 年（丙午）');
+check('monthly 國曆標籤格式正確', /^2026 年 8 月（[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]）$/.test(payload.scopeInfo.monthly.label));
 
 // --- 2. summarizeCheckins：30 日記憶壓縮 ---
 const sum = summarizeCheckins([
@@ -46,6 +48,8 @@ const fullPayload = { ...payload, memorySummary: sum };
 const [sys, usr] = buildHoroscopePrompt(fullPayload);
 check('prompt 有 system+user 兩則', sys.role === 'system' && usr.role === 'user');
 check('prompt 帶流年干支與落宮', usr.content.includes('流年：') && usr.content.includes('流年命宮落在本命'));
+check('prompt 帶流年國曆標籤', usr.content.includes('2026 年（丙午）') && usr.content.includes(payload.scopeInfo.monthly.label));
+check('system 要求實際時間詞', sys.content.includes('今年 X 月'));
 check('prompt 帶流月干支與落宮', usr.content.includes('流月：') && usr.content.includes('流月命宮落在本命'));
 check('prompt 帶本命四宮', ['命宮', '官祿', '財帛', '夫妻'].every((n) => usr.content.includes(`【${n}】`)));
 check('prompt 帶記憶摘要', usr.content.includes('近 30 日打卡 3 則') && usr.content.includes('工作卡關×2'));

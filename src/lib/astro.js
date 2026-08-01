@@ -78,7 +78,7 @@ export function buildHoroscopePayload(profile, scope, now = new Date()) {
   const astrolabe = buildAstrolabe(profile);
   const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const h = astrolabe.horoscope(iso);
-  const pick = (sc) => {
+  const pick = (sc, label) => {
     const soulIdx = sc.palaceNames.indexOf('命宮');
     return {
       stem: sc.heavenlyStem,
@@ -86,11 +86,17 @@ export function buildHoroscopePayload(profile, scope, now = new Date()) {
       mutagen: sc.mutagen,
       soulNatalPalace: soulIdx >= 0 ? base.palaces[soulIdx].name : '',
       palaceNames: sc.palaceNames,
+      // 國曆標籤：讓 LLM 與使用者都知道「流年/流月」實際指哪段時間
+      label,
     };
   };
   const scopeInfo = {};
-  if (scope === 'yearly' || scope === 'both') scopeInfo.yearly = pick(h.yearly);
-  if (scope === 'monthly' || scope === 'both') scopeInfo.monthly = pick(h.monthly);
+  if (scope === 'yearly' || scope === 'both') {
+    scopeInfo.yearly = pick(h.yearly, `${now.getFullYear()} 年（${h.yearly.heavenlyStem}${h.yearly.earthlyBranch}）`);
+  }
+  if (scope === 'monthly' || scope === 'both') {
+    scopeInfo.monthly = pick(h.monthly, `${now.getFullYear()} 年 ${now.getMonth() + 1} 月（${h.monthly.heavenlyStem}${h.monthly.earthlyBranch}）`);
+  }
   return { ...base, scopeInfo };
 }
 // 深度命盤解讀 payload：完整十二宮星曜＋目前大限，送 Worker /api/chart-report

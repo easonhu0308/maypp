@@ -85,7 +85,7 @@ export default function Auspicious() {
 
       {llmLoading && (
         <div className="card" style={{ borderStyle: 'dashed' }}>
-          <p className="lead" style={{ fontSize: 13, margin: 0 }}>✨ AI 正在為這 3 天寫推薦理由…</p>
+          <p className="lead" style={{ fontSize: 13, margin: 0 }}>✨ AI 正在為這 3 天寫推薦理由 <span className="loading-dots"><i /><i /><i /></span></p>
         </div>
       )}
 

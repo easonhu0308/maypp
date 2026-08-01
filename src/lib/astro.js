@@ -58,6 +58,28 @@ export function lunarDateShort(astrolabe) {
   return String(astrolabe.lunarDate || '').replace(/^.+?年/, '');
 }
 
+// 流年/流月 payload：本命盤＋指定 scope 的干支、四化、命宮落宮
+// scope: 'yearly' | 'monthly'；iztro palaceNames[i] 對應 palaces[i]，index 即該 scope 命宮位置
+export function buildHoroscopePayload(profile, scope, now = new Date()) {
+  const base = buildChartPayload(profile, now);
+  const astrolabe = buildAstrolabe(profile);
+  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const h = astrolabe.horoscope(iso);
+  const pick = (sc) => {
+    const soulIdx = sc.palaceNames.indexOf('命宮');
+    return {
+      stem: sc.heavenlyStem,
+      branch: sc.earthlyBranch,
+      mutagen: sc.mutagen,
+      soulNatalPalace: soulIdx >= 0 ? base.palaces[soulIdx].name : '',
+      palaceNames: sc.palaceNames,
+    };
+  };
+  const scopeInfo = {};
+  if (scope === 'yearly' || scope === 'both') scopeInfo.yearly = pick(h.yearly);
+  if (scope === 'monthly' || scope === 'both') scopeInfo.monthly = pick(h.monthly);
+  return { ...base, scopeInfo };
+}
 // 深度命盤解讀 payload：完整十二宮星曜＋目前大限，送 Worker /api/chart-report
 export function buildChartPayload(profile, now = new Date()) {
   const astrolabe = buildAstrolabe(profile);

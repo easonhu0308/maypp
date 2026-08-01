@@ -259,6 +259,21 @@ export const ASK_CATEGORIES = {
   yearly: { name: '年度運勢', palace: '命宮', tone: '大方向對了，小波折不會翻船', icon: '📅', desc: '大方向與年度重點' },
 };
 
+// 近 N 日打卡摘要（純函式）：送 LLM 的「近期狀態」壓縮版，避免 prompt 爆量
+export function summarizeCheckins(checkins) {
+  const days = checkins.length;
+  const moods = checkins.map((c) => c.mood).filter((m) => Number.isFinite(m));
+  const avgMood = moods.length
+    ? Math.round((moods.reduce((a, b) => a + b, 0) / moods.length) * 10) / 10
+    : null;
+  const counts = {};
+  for (const c of checkins) {
+    for (const t of c.tags || []) counts[t] = (counts[t] || 0) + 1;
+  }
+  const topTags = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return { days, avgMood, topTags };
+}
+
 const ASK_ADVICE = [
   '把問題具體寫下來，比反覆想十次更有用。',
   '今天適合先跟信任的人說說看，旁觀者有時比當局者清楚。',

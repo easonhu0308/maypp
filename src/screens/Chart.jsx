@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getProfile, getSettings } from '../lib/storage.js';
 import { fetchLlmChartReport } from '../lib/llmChart.js';
+import { fetchLlmHoroscope } from '../lib/llmHoroscope.js';
 import {
   buildAstrolabe,
   CHART_ORDER,
@@ -52,6 +53,8 @@ export default function Chart() {
   const [dim, setDim] = useState('personality');
   // AI 關閉時不顯示等待提示；開啟時先假設會生成，失敗再靜默收起
   const [deepLoading, setDeepLoading] = useState(() => getSettings().aiDaily !== false);
+  const [horo, setHoro] = useState(null);
+  const [horoLoading, setHoroLoading] = useState(() => getSettings().aiDaily !== false);
 
   useEffect(() => {
     let alive = true;
@@ -59,6 +62,11 @@ export default function Chart() {
       if (!alive) return;
       if (report) setDeep(report);
       setDeepLoading(false);
+    });
+    fetchLlmHoroscope(profile).then((report) => {
+      if (!alive) return;
+      if (report) setHoro(report);
+      setHoroLoading(false);
     });
     return () => { alive = false; };
   }, [profile]);
@@ -155,6 +163,32 @@ export default function Chart() {
             </div>
           )}
         </>
+      )}
+
+      {!horo && horoLoading && (
+        <div className="card" style={{ borderStyle: 'dashed' }}>
+          <p className="lead" style={{ fontSize: 13, margin: 0 }}>📅 今年與本月的運勢解讀生成中…</p>
+        </div>
+      )}
+
+      {horo && (
+        <div className="card">
+          <h3>📅 今年與本月{horo.source === 'llm' ? ' · AI' : ''}</h3>
+          {horo.yearly && (
+            <div style={{ marginTop: 6 }}>
+              <p className="lead" style={{ fontWeight: 700, marginBottom: 4 }}>今年｜{horo.yearly.theme}</p>
+              <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{horo.yearly.text}</p>
+              {horo.yearly.focus && <p className="note mt8">✦ 值得留意：{horo.yearly.focus}</p>}
+            </div>
+          )}
+          {horo.monthly && (
+            <div style={{ marginTop: 14 }}>
+              <p className="lead" style={{ fontWeight: 700, marginBottom: 4 }}>本月｜{horo.monthly.theme}</p>
+              <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{horo.monthly.text}</p>
+              {horo.monthly.focus && <p className="note mt8">✦ 值得留意：{horo.monthly.focus}</p>}
+            </div>
+          )}
+        </div>
       )}
 
       <Link className="btn btn-gold" to="/today">下一步：看看今天的日報 →</Link>

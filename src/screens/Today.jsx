@@ -8,7 +8,9 @@ import { formatDateLabel } from '../lib/time.js';
 import TabBar from '../components/TabBar.jsx';
 
 export default function Today() {
-  const profile = getProfile();
+  // getProfile() 每次都回傳新物件，必須記憶化，否則 useEffect 依賴會一直變、
+  // LLM 日報快取命中時 setReport 造成無限 re-render（整頁卡死）
+  const profile = useMemo(() => getProfile(), []);
   const aiDailyOn = getSettings().aiDaily !== false;
   const now = useMemo(() => new Date(), []);
   const mingStars = useMemo(() => getMingStarNames(buildAstrolabe(profile)), [profile]);

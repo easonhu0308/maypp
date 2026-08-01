@@ -187,6 +187,7 @@ export function buildAskPrompt(payload) {
     question = '',
     palaces = [],
     decadal = null,
+    scopeInfo = null,
     recentCheckins = [],
   } = payload || {};
 
@@ -212,6 +213,14 @@ export function buildAskPrompt(payload) {
     ? `目前大限：${decadal.stem}${decadal.branch}限（虛歲 ${decadal.range[0]}–${decadal.range[1]} 歲）`
     : '（大限資料未提供）';
 
+  const scopeLine = (label, sc) => {
+    if (!sc) return '';
+    const mut = Array.isArray(sc.mutagen) && sc.mutagen.length === 4
+      ? `，四化：${sc.mutagen[0]}化祿、${sc.mutagen[1]}化權、${sc.mutagen[2]}化科、${sc.mutagen[3]}化忌`
+      : '';
+    return `${label}：${sc.stem}${sc.branch}${mut}，${label}命宮落在本命「${sc.soulNatalPalace}」`;
+  };
+
   const system = [
     '你是「懂你紫微」的問事解讀師——一個紫微斗數 × 正向心理學的陪伴 App。',
     '讀者帶著一個具體問題來，你要結合他的本命盤（特別是與問題對應的宮位）、目前大限與近期狀態，給出一份「有推理過程」的建議。',
@@ -227,7 +236,8 @@ export function buildAskPrompt(payload) {
     '',
     '輸出 JSON 結構（全部必填）：',
     '{',
-    '  "astrology": "命理觀點，120-180字。從對應宮位的星曜組合與四化推理這個問題的結構，最後扣回問題本身給方向",',
+    '  "astrology": "命理觀點，120-180字。從對應宮位的星曜組合與四化推理這個問題的結構",',
+    '  "timing": "時機判斷，60-100字。結合流年/流月命宮落宮與四化，判斷這件事近期是順勢還是蓄势，什麼時候行動較有利",',
     '  "memory": "從最近狀態來看，60-100字。若下方有打卡，點名回應最近一件相關的事；無打卡則扣合他的星曜特質寫一段理解他的話",',
     '  "actions": ["具體行動建議一，30字內", "建議二，30字內", "建議三，30字內"]',
     '}',
@@ -242,6 +252,8 @@ export function buildAskPrompt(payload) {
     `【命宮】${palaceLine(palaces.find((p) => p.name === '命宮'))}`,
     `【身宮所在】${palaceLine(palaces.find((p) => p.isBody))}`,
     decadeLine,
+    scopeLine('流年', scopeInfo && scopeInfo.yearly),
+    scopeLine('流月', scopeInfo && scopeInfo.monthly),
     '',
     '近 7 日打卡（新→舊）：',
     checkinLines,
@@ -265,9 +277,69 @@ export function normalizeAskFields(raw) {
   if (actions.length === 0) return null;
   return {
     astrology,
+    timing: asText(raw.timing, ''),
     memory: asText(raw.memory, ''),
     actions,
   };
+}
+
+// --- 問事追問 Prompt（對話式，純文字回覆） ---
+export function buildAskChatPrompt(payload) {
+  const {
+    nickname = '朋友',
+    categoryName = '問事',
+    question = '',
+    reportAstrology = '',
+    focusPalaceBrief = '',
+    history = [],
+    message = '',
+  } = payload || {};
+
+  const historyLines = history.length
+    ? history.map((h) => `${h.role === 'user' ? '他' : '你'}：${String(h.content).slice(0, 300)}`).join('\n')
+    : '（尚無追問紀錄）';
+
+  const system = [
+    '你是「懂你紫微」的問事解讀師，正在跟讀者進行一場問事對談。',
+    '他已經拿到一份問事報告，現在針對報告繼續追問。你要像朋友一樣直接回答他的問題。',
+    '',
+    '硬規則：',
+    '- 全部文案正向框架：可以承認困境，但結尾一定給出路；不做負面斷言、不嚇人、不宿命論。',
+    '- 回答要扣合他的命盤依據與已給過的報告，不要前後矛盾，也不要重複報告內容。',
+    '- 每次回覆 80-150 字，口語、溫暖、具體，像 LINE 回朋友一樣。',
+    '- 使用繁體中文（台灣用語）。',
+    '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
+    '- 直接輸出回覆文字，不要 JSON、不要 markdown。',
+  ].join('\n');
+
+  const user = [
+    `讀者暱稱：${nickname}`,
+    `問題領域：${categoryName}`,
+    `他原本的問題：${question || '（未填寫）'}`,
+    `【對應宮位】${focusPalaceBrief || '（無資料）'}`,
+    `你給他的報告命理觀點：「${reportAstrology}」`,
+    '',
+    '對話紀錄（舊→新）：',
+    historyLines,
+    '',
+    `他現在問：${message}`,
+    '',
+    '請直接回覆。',
+  ].join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+// --- 追問回覆正規化：純文字，去圍欄，非空即可 ---
+export function normalizeChatReply(content) {
+  if (!content || typeof content !== 'string') return null;
+  let s = content.trim();
+  const fence = s.match(/```(?:\w+)?\s*([\s\S]*?)```/);
+  if (fence) s = fence[1].trim();
+  return s || null;
 }
 
 // --- 流年/流月 Prompt（scope 干支＋命宮落宮＋四化＋30 日記憶摘要，嚴格 JSON 輸出） ---
@@ -545,12 +617,34 @@ async function handleAskReport(request, env) {
     return json({ error: 'bad_request' }, 400);
   }
 
-  const { content, error } = await callLlm(env, buildAskPrompt(payload), 1500, CHART_UPSTREAM_TIMEOUT_MS);
+  const { content, error } = await callLlm(env, buildAskPrompt(payload), 1800, CHART_UPSTREAM_TIMEOUT_MS);
   if (error) return error;
   const fields = normalizeAskFields(extractJson(content));
   if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
 
   return json(fields);
+}
+
+async function handleAskChat(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object' || typeof payload.message !== 'string' || !payload.message.trim()) {
+    return json({ error: 'bad_request' }, 400);
+  }
+  // 對話歷史截斷：最多保留最後 20 則，避免 prompt 爆量
+  if (Array.isArray(payload.history)) payload.history = payload.history.slice(-20);
+  else payload.history = [];
+
+  const { content, error } = await callLlm(env, buildAskChatPrompt(payload), 800, CHART_UPSTREAM_TIMEOUT_MS);
+  if (error) return error;
+  const reply = normalizeChatReply(content);
+  if (!reply) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
+
+  return json({ reply });
 }
 
 async function handleHoroscopeReport(request, env) {
@@ -587,6 +681,10 @@ export default {
     if (url.pathname === '/api/ask-report') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       return handleAskReport(request, env);
+    }
+    if (url.pathname === '/api/ask-chat') {
+      if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+      return handleAskChat(request, env);
     }
     if (url.pathname === '/api/horoscope-report') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);

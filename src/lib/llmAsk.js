@@ -6,7 +6,7 @@
 //   settings.personalize === false → 不把打卡內容送上雲端
 // ============================================================
 import { getSettings } from './storage.js';
-import { buildChartPayload } from './astro.js';
+import { buildHoroscopePayload } from './astro.js';
 
 // 必須大於 worker 的上游逾時（60s），否則上游還在生成前端就先放棄
 export const FETCH_TIMEOUT_MS = 70000;
@@ -23,7 +23,7 @@ export async function fetchLlmAskReport({ profile, category, question, recent, n
   const settings = getSettings();
   if (settings.aiDaily === false) return null;
 
-  const chartPayload = buildChartPayload(profile, now);
+  const chartPayload = buildHoroscopePayload(profile, 'both', now);
   const sendCheckins = settings.personalize === false ? [] : recent;
   const payload = {
     ...chartPayload,

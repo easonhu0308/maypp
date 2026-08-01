@@ -8,6 +8,7 @@
 import { getSettings } from './storage.js';
 import { dayGanzhi } from './daily.js';
 import { toISODate } from './time.js';
+import { userProfileForPrompt } from './userProfile.js';
 
 const CACHE_KEY = 'ziwei.dailyLLM';
 const FETCH_TIMEOUT_MS = 65000;
@@ -66,6 +67,7 @@ export async function fetchLlmDailyFields(profile, mingStars, recent, now = new 
     gender: profile.genderRaw || profile.gender || '',
     mingStars: mingStars || [],
     dayGanzhi: dayGanzhi(now),
+    userProfile: userProfileForPrompt(),
     recentCheckins: sendCheckins.map((c) => ({
       date: c.date,
       mood: c.mood,

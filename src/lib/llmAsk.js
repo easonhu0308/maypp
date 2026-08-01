@@ -7,6 +7,7 @@
 // ============================================================
 import { getSettings } from './storage.js';
 import { buildHoroscopePayload } from './astro.js';
+import { userProfileForPrompt } from './userProfile.js';
 
 // 必須大於 worker 的上游逾時（60s），否則上游還在生成前端就先放棄
 export const FETCH_TIMEOUT_MS = 70000;
@@ -30,6 +31,7 @@ export async function fetchLlmAskReport({ profile, category, question, recent, n
     categoryName: category.name,
     categoryPalace: category.palace === '僕役' ? '交友' : category.palace,
     question: (question || '').slice(0, 200),
+    userProfile: userProfileForPrompt(),
     recentCheckins: sendCheckins.map((c) => ({
       date: c.date,
       mood: c.mood,

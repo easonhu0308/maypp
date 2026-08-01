@@ -9,6 +9,7 @@
 import { getSettings, recentCheckins } from './storage.js';
 import { buildHoroscopePayload } from './astro.js';
 import { summarizeCheckins } from './daily.js';
+import { userProfileForPrompt } from './userProfile.js';
 
 const CACHE_KEY = 'ziwei.horoscopeLLM';
 // 必須大於 worker 的上游逾時（60s）
@@ -53,6 +54,7 @@ export async function fetchLlmHoroscope(profile, now = new Date()) {
   if (cached) return { ...cached, source: 'llm' };
 
   const payload = buildHoroscopePayload(profile, 'both', now);
+  payload.userProfile = userProfileForPrompt();
   if (settings.personalize !== false) {
     payload.memorySummary = summarizeCheckins(recentCheckins(30));
   }

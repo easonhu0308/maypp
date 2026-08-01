@@ -45,7 +45,9 @@ const DIM_TABS = [
 ];
 
 export default function Chart() {
-  const profile = getProfile();
+  // getProfile() 每次都回傳新物件，必須記憶化，否則 useEffect 依賴會一直變、
+  // 快取命中時 setDeep 造成無限 re-render
+  const profile = useMemo(() => getProfile(), []);
   const [deep, setDeep] = useState(null);
   const [dim, setDim] = useState('personality');
 
@@ -65,6 +67,11 @@ export default function Chart() {
   }, [astrolabe]);
   const mingStars = getMingStarNames(astrolabe);
   const yinYang = getYinYang(astrolabe);
+
+  // LLM 只保證「至少一個維度非空」；選中的維度可能為空字串，fallback 到第一個有內容的
+  const shownDim = deep
+    ? (deep.dims[dim] ? dim : (DIM_TABS.find((t) => deep.dims[t.key]) || {}).key)
+    : dim;
 
   return (
     <div className="app">
@@ -118,14 +125,14 @@ export default function Chart() {
                 <button
                   key={t.key}
                   type="button"
-                  className={`chip${dim === t.key ? ' on' : ''}`}
+                  className={`chip${shownDim === t.key ? ' on' : ''}`}
                   onClick={() => setDim(t.key)}
                 >
                   {t.label}
                 </button>
               ))}
             </div>
-            <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.dims[dim]}</p>
+            <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.dims[shownDim]}</p>
           </div>
 
           {deep.decade && (

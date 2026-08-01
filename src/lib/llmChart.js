@@ -11,8 +11,9 @@ const CACHE_KEY = 'ziwei.chartLLM';
 const FETCH_TIMEOUT_MS = 20000;
 
 // 輸入簽名：命盤由生日＋時辰＋性別決定，改名不影響內容但一併納入避免混用
+// v1：prompt 或欄位結構改版時遞增，讓舊快取自動失效
 function signature(profile) {
-  return [profile.nickname, profile.solarDate, profile.timeIndex, profile.gender].join('|');
+  return ['v1', profile.nickname, profile.solarDate, profile.timeIndex, profile.gender].join('|');
 }
 
 function readCache(sig) {

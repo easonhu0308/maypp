@@ -62,7 +62,8 @@ export function scanAuspiciousDays(profile, activityKey, { days = 30, from = new
         if (type === '科') { score += 6; hits.push(`${star}化科照${palace}宮`); }
         if (type === '忌') { score -= 12; hits.push(`${star}化忌擾${palace}宮`); }
       }
-      if (type === '忌' && palace === '命宮') {
+      // 忌在命宮的一般性懲罰：僅在命宮非主題宮時生效，避免與主題宮懲罰重複計算
+      if (type === '忌' && palace === '命宮' && !focus.includes('命宮')) {
         score -= 6;
         hits.push(`${star}化忌在命宮`);
       }

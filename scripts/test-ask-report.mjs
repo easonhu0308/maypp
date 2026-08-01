@@ -25,8 +25,8 @@ const chartPayload = buildChartPayload(profile, new Date('2026-08-01T15:00:00'))
 const payload = {
   ...chartPayload,
   scopeInfo: {
-    yearly: { stem: '丙', branch: '午', mutagen: ['天同', '天機', '文昌', '廉貞'], soulNatalPalace: '官祿', palaceNames: [] },
-    monthly: { stem: '丙', branch: '申', mutagen: ['天同', '天機', '文昌', '廉貞'], soulNatalPalace: '財帛', palaceNames: [] },
+    yearly: { stem: '丙', branch: '午', mutagen: ['天同', '天機', '文昌', '廉貞'], soulNatalPalace: '官祿', palaceNames: [], label: '2026 年（丙午）' },
+    monthly: { stem: '丙', branch: '申', mutagen: ['天同', '天機', '文昌', '廉貞'], soulNatalPalace: '財帛', palaceNames: [], label: '2026 年 8 月（丙申）' },
   },
   categoryName: '事業',
   categoryPalace: '官祿',
@@ -43,6 +43,8 @@ check('prompt 帶命宮與身宮區塊', usr.content.includes('【命宮】') &&
 check('prompt 帶打卡內容', usr.content.includes('工作卡關') && usr.content.includes('專案一直改方向'));
 check('prompt 帶大限', usr.content.includes('目前大限'));
 check('prompt 帶流年流月落宮', usr.content.includes('流年命宮落在本命「官祿」') && usr.content.includes('流月命宮落在本命「財帛」'));
+check('prompt 帶流月國曆標籤', usr.content.includes('2026 年 8 月（丙申）'));
+check('system 要求實際時間詞', sys.content.includes('今年 X 月'));
 check('system 要求時機判斷欄位', sys.content.includes('timing') && sys.content.includes('時機判斷'));
 check('system 禁止只提命宮主星', sys.content.includes('嚴禁只提命宮主星'));
 check('system 規定正向與 JSON 輸出', sys.content.includes('正向') && sys.content.includes('JSON'));

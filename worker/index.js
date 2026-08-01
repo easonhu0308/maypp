@@ -228,7 +228,7 @@ export function buildAskPrompt(payload) {
     const mut = Array.isArray(sc.mutagen) && sc.mutagen.length === 4
       ? `，四化：${sc.mutagen[0]}化祿、${sc.mutagen[1]}化權、${sc.mutagen[2]}化科、${sc.mutagen[3]}化忌`
       : '';
-    return `${label}：${sc.stem}${sc.branch}${mut}，${label}命宮落在本命「${sc.soulNatalPalace}」`;
+    return `${label}：${sc.label || `${sc.stem}${sc.branch}`}${mut}，${label}命宮落在本命「${sc.soulNatalPalace}」`;
   };
 
   const system = [
@@ -238,6 +238,7 @@ export function buildAskPrompt(payload) {
     '硬規則：',
     '- 全部文案正向框架：可以承認困境，但結尾一定給出路；不做負面斷言、不嚇人、不宿命論。',
     '- 命理觀點必須「有依據」：點到對應宮位的具體星曜與四化，用白話解釋它跟這個問題的關係；嚴禁只提命宮主星就下結論。',
+    '- 提到流年/流月時，使用「今年」「今年 X 月」等實際時間詞（依下方提供的國曆標籤），讓讀者清楚知道是哪段時間。',
     '- 建議必須具體可執行，避免「順其自然」「保持正向」這種空話。',
     '- 語氣像很懂他的朋友：溫暖、直接、不說教。',
     '- 若下方提供「長期畫像」，那是你對他的長期筆記：解讀要自然體現你記得他的長期狀態，但不要直接引用畫像原文。',
@@ -378,7 +379,7 @@ export function buildHoroscopePrompt(payload) {
     const mut = Array.isArray(sc.mutagen) && sc.mutagen.length === 4
       ? `，四化：${sc.mutagen[0]}化祿、${sc.mutagen[1]}化權、${sc.mutagen[2]}化科、${sc.mutagen[3]}化忌`
       : '';
-    return `${label}：${sc.stem}${sc.branch}${mut}，${label}命宮落在本命「${sc.soulNatalPalace}」`;
+    return `${label}：${sc.label || `${sc.stem}${sc.branch}`}${mut}，${label}命宮落在本命「${sc.soulNatalPalace}」`;
   };
 
   const memoryLine = memorySummary && memorySummary.days > 0
@@ -395,6 +396,7 @@ export function buildHoroscopePrompt(payload) {
     '硬規則：',
     '- 全部文案正向框架：可以提醒注意事項，但結尾一定給出路與力量；不做負面斷言、不嚇人、不宿命論。',
     '- 解讀必須「有依據」：扣合流年/流月命宮所落的本命宮位與四化，用白話解釋意義。',
+    '- 提到流年/流月時，使用「今年」「今年 X 月」等實際時間詞（依下方提供的國曆標籤），讓讀者清楚知道是哪段時間。',
     '- 語氣像很懂他的朋友：溫暖、具體、不說教。',
     '- 若下方提供「長期畫像」，那是你對他的長期筆記：解讀要自然體現你記得他的長期狀態，但不要直接引用畫像原文。',
     '- 使用繁體中文（台灣用語）。',

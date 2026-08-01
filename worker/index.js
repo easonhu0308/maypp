@@ -270,6 +270,100 @@ export function normalizeAskFields(raw) {
   };
 }
 
+// --- 流年/流月 Prompt（scope 干支＋命宮落宮＋四化＋30 日記憶摘要，嚴格 JSON 輸出） ---
+export function buildHoroscopePrompt(payload) {
+  const {
+    nickname = '朋友',
+    palaces = [],
+    decadal = null,
+    scopeInfo = {},
+    memorySummary = null,
+  } = payload || {};
+
+  const palaceBrief = (name) => {
+    const p = palaces.find((x) => x.name === name);
+    if (!p) return '（無資料）';
+    const major = (p.major || []).join('、') || '（無主星）';
+    const mut = (p.mutagens || []).join('、');
+    return `主星：${major}${mut ? `，四化：${mut}` : ''}`;
+  };
+
+  const scopeLine = (label, sc) => {
+    if (!sc) return '';
+    const mut = Array.isArray(sc.mutagen) && sc.mutagen.length === 4
+      ? `，四化：${sc.mutagen[0]}化祿、${sc.mutagen[1]}化權、${sc.mutagen[2]}化科、${sc.mutagen[3]}化忌`
+      : '';
+    return `${label}：${sc.stem}${sc.branch}${mut}，${label}命宮落在本命「${sc.soulNatalPalace}」`;
+  };
+
+  const memoryLine = memorySummary && memorySummary.days > 0
+    ? `近 30 日打卡 ${memorySummary.days} 則、平均心情 ${memorySummary.avgMood ?? '-'}/5` +
+      (memorySummary.topTags && memorySummary.topTags.length
+        ? `、常見標籤：${memorySummary.topTags.map(([t, n]) => `${t}×${n}`).join('、')}`
+        : '')
+    : '（近 30 日無打卡）';
+
+  const system = [
+    '你是「懂你紫微」的運勢解讀師——一個紫微斗數 × 正向心理學的陪伴 App。',
+    '根據讀者的本命盤與流年/流月資料，寫「今年」與「本月」的運勢解讀。',
+    '',
+    '硬規則：',
+    '- 全部文案正向框架：可以提醒注意事項，但結尾一定給出路與力量；不做負面斷言、不嚇人、不宿命論。',
+    '- 解讀必須「有依據」：扣合流年/流月命宮所落的本命宮位與四化，用白話解釋意義。',
+    '- 語氣像很懂他的朋友：溫暖、具體、不說教。',
+    '- 使用繁體中文（台灣用語）。',
+    '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
+    '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
+    '',
+    '輸出 JSON 結構（yearly/monthly 至少一個必填，資料有才給）：',
+    '{',
+    '  "yearly": { "theme": "今年主題，12字內", "text": "今年解讀，120-180字", "focus": "今年最值得留意的一件事，40字內" },',
+    '  "monthly": { "theme": "本月主題，12字內", "text": "本月解讀，80-140字", "focus": "本月最值得留意的一件事，40字內" }',
+    '}',
+  ].join('\n');
+
+  const user = [
+    `讀者暱稱：${nickname}`,
+    `本命【命宮】${palaceBrief('命宮')}`,
+    `本命【官祿】${palaceBrief('官祿')}`,
+    `本命【財帛】${palaceBrief('財帛')}`,
+    `本命【夫妻】${palaceBrief('夫妻')}`,
+    decadal ? `目前大限：${decadal.stem}${decadal.branch}限（虛歲 ${decadal.range[0]}–${decadal.range[1]} 歲）` : '（大限資料未提供）',
+    scopeLine('流年', scopeInfo.yearly),
+    scopeLine('流月', scopeInfo.monthly),
+    '',
+    '讀者近期狀態：',
+    memoryLine,
+    '',
+    '請產出流年/流月解讀 JSON。',
+  ].filter(Boolean).join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+// --- 流年/流月欄位正規化；yearly/monthly 至少一個有 theme+text ---
+function normalizeScope(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const theme = asText(raw.theme, '');
+  const text = asText(raw.text, '');
+  if (!theme || !text) return null;
+  return { theme, text, focus: asText(raw.focus, '') };
+}
+
+export function normalizeHoroscopeFields(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const yearly = normalizeScope(raw.yearly);
+  const monthly = normalizeScope(raw.monthly);
+  if (!yearly && !monthly) return null;
+  const out = {};
+  if (yearly) out.yearly = yearly;
+  if (monthly) out.monthly = monthly;
+  return out;
+}
+
 const clampInt = (v, min, max, fallback) => {
   const n = Math.round(Number(v));
   if (!Number.isFinite(n)) return fallback;
@@ -459,6 +553,26 @@ async function handleAskReport(request, env) {
   return json(fields);
 }
 
+async function handleHoroscopeReport(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object' || !payload.scopeInfo ||
+      (!payload.scopeInfo.yearly && !payload.scopeInfo.monthly)) {
+    return json({ error: 'bad_request' }, 400);
+  }
+
+  const { content, error } = await callLlm(env, buildHoroscopePrompt(payload), 1800, CHART_UPSTREAM_TIMEOUT_MS);
+  if (error) return error;
+  const fields = normalizeHoroscopeFields(extractJson(content));
+  if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
+
+  return json(fields);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -473,6 +587,10 @@ export default {
     if (url.pathname === '/api/ask-report') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       return handleAskReport(request, env);
+    }
+    if (url.pathname === '/api/horoscope-report') {
+      if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+      return handleHoroscopeReport(request, env);
     }
     if (url.pathname === '/api/health') {
       return json({

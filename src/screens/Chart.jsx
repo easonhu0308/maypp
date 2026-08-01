@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getProfile } from '../lib/storage.js';
+import { getProfile, getSettings } from '../lib/storage.js';
 import { fetchLlmChartReport } from '../lib/llmChart.js';
 import {
   buildAstrolabe,
@@ -50,11 +50,15 @@ export default function Chart() {
   const profile = useMemo(() => getProfile(), []);
   const [deep, setDeep] = useState(null);
   const [dim, setDim] = useState('personality');
+  // AI 關閉時不顯示等待提示；開啟時先假設會生成，失敗再靜默收起
+  const [deepLoading, setDeepLoading] = useState(() => getSettings().aiDaily !== false);
 
   useEffect(() => {
     let alive = true;
     fetchLlmChartReport(profile).then((report) => {
-      if (alive && report) setDeep(report);
+      if (!alive) return;
+      if (report) setDeep(report);
+      setDeepLoading(false);
     });
     return () => { alive = false; };
   }, [profile]);
@@ -111,6 +115,15 @@ export default function Chart() {
         <p className="lead">{describePattern(mingStars)}</p>
         {!deep && <p className="mt8">這只是命盤的千分之一。完整的十二宮解析、大限流年走向，都在深度報告裡。</p>}
       </div>
+
+      {!deep && deepLoading && (
+        <div className="card" style={{ borderStyle: 'dashed' }}>
+          <h3>✨ 正在為你細讀整張命盤…</h3>
+          <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>
+            AI 正在逐一解析你的十二宮與目前大限，第一次生成約需 30–60 秒。先看看上面的格局，深度解讀馬上送到。
+          </p>
+        </div>
+      )}
 
       {deep && (
         <>

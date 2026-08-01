@@ -30,6 +30,7 @@ export default function About() {
       <div className="card">
         <h3>🌿 重要的小事</h3>
         <p>懂你紫微是自我探索與娛樂用途，不提供醫療、心理治療或投資建議。如果你最近真的很累、很辛苦了，請找專業的人陪你：安心專線 1925 · 生命線 1995 · 張老師 1980。</p>
+        <p className="disclaimer" style={{ marginTop: 8 }}>目前版本 v0.1.0 · AI 日報測試中</p>
       </div>
 
       <Link className="btn btn-gold" to="/today">回到今日日報 ☀</Link>

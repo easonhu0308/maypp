@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getProfile } from '../lib/storage.js';
+import { fetchLlmChartReport } from '../lib/llmChart.js';
 import {
   buildAstrolabe,
   CHART_ORDER,
@@ -35,8 +36,29 @@ function PalaceCell({ palace }) {
   );
 }
 
+const DIM_TABS = [
+  { key: 'personality', label: '性格本質' },
+  { key: 'career', label: '事業' },
+  { key: 'love', label: '感情' },
+  { key: 'money', label: '財運' },
+  { key: 'social', label: '人際' },
+];
+
 export default function Chart() {
-  const profile = getProfile();
+  // getProfile() 每次都回傳新物件，必須記憶化，否則 useEffect 依賴會一直變、
+  // 快取命中時 setDeep 造成無限 re-render
+  const profile = useMemo(() => getProfile(), []);
+  const [deep, setDeep] = useState(null);
+  const [dim, setDim] = useState('personality');
+
+  useEffect(() => {
+    let alive = true;
+    fetchLlmChartReport(profile).then((report) => {
+      if (alive && report) setDeep(report);
+    });
+    return () => { alive = false; };
+  }, [profile]);
+
   const astrolabe = useMemo(() => buildAstrolabe(profile), [profile]);
   const byBranch = useMemo(() => {
     const map = {};
@@ -45,6 +67,11 @@ export default function Chart() {
   }, [astrolabe]);
   const mingStars = getMingStarNames(astrolabe);
   const yinYang = getYinYang(astrolabe);
+
+  // LLM 只保證「至少一個維度非空」；選中的維度可能為空字串，fallback 到第一個有內容的
+  const shownDim = deep
+    ? (deep.dims[dim] ? dim : (DIM_TABS.find((t) => deep.dims[t.key]) || {}).key)
+    : dim;
 
   return (
     <div className="app">
@@ -82,8 +109,40 @@ export default function Chart() {
       <div className="card glow">
         <h3>✦ 一句話看懂你的格局</h3>
         <p className="lead">{describePattern(mingStars)}</p>
-        <p className="mt8">這只是命盤的千分之一。完整的十二宮解析、大限流年走向，都在深度報告裡。</p>
+        {!deep && <p className="mt8">這只是命盤的千分之一。完整的十二宮解析、大限流年走向，都在深度報告裡。</p>}
       </div>
+
+      {deep && (
+        <>
+          <div className="card glow">
+            <h3>🔮 深度命盤解讀{deep.source === 'llm' ? ' · AI' : ''}</h3>
+            <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.summary}</p>
+          </div>
+
+          <div className="card">
+            <div className="chips mb8">
+              {DIM_TABS.filter((t) => deep.dims[t.key]).map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  className={`chip${shownDim === t.key ? ' on' : ''}`}
+                  onClick={() => setDim(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.dims[shownDim]}</p>
+          </div>
+
+          {deep.decade && (
+            <div className="card" style={{ borderColor: 'rgba(216,181,128,.35)', background: 'rgba(216,181,128,.07)' }}>
+              <h3>🌊 這十年的主題</h3>
+              <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.decade}</p>
+            </div>
+          )}
+        </>
+      )}
 
       <Link className="btn btn-gold" to="/today">下一步：看看今天的日報 →</Link>
       <Link className="btn btn-ghost mt8" to="/reports" style={{ fontSize: 13, padding: 12 }}>查看問事報告</Link>

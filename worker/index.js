@@ -95,6 +95,85 @@ export function extractJson(content) {
   }
 }
 
+// --- 深度命盤解讀 Prompt（完整十二宮＋大限，嚴格 JSON 輸出） ---
+export function buildChartPrompt(payload) {
+  const {
+    nickname = '朋友',
+    gender = '',
+    fiveElementsClass = '',
+    soul = '',
+    body = '',
+    mingBranch = '',
+    bodyBranch = '',
+    palaces = [],
+    decadal = null,
+  } = payload || {};
+
+  const palaceLines = palaces
+    .map((p) => {
+      const major = (p.major || []).join('、') || '（無主星）';
+      const minor = (p.minor || []).join('、');
+      const mut = (p.mutagens || []).join('、');
+      const parts = [`【${p.name}（${p.branch}）】主星：${major}`];
+      if (minor) parts.push(`輔雜曜：${minor}`);
+      if (mut) parts.push(`四化：${mut}`);
+      if (p.isBody) parts.push('（身宮所在）');
+      return parts.join('，');
+    })
+    .join('\n');
+
+  const decadeLine = decadal
+    ? `目前大限：${decadal.stem}${decadal.branch}限（虛歲 ${decadal.range[0]}–${decadal.range[1]} 歲，現約 ${decadal.nominalAge} 歲）` +
+      (Array.isArray(decadal.mutagen) && decadal.mutagen.length === 4
+        ? `，大限四化：${decadal.mutagen[0]}化祿、${decadal.mutagen[1]}化權、${decadal.mutagen[2]}化科、${decadal.mutagen[3]}化忌`
+        : '')
+    : '（大限資料未提供）';
+
+  const system = [
+    '你是「懂你紫微」的命盤解讀師——一個紫微斗數 × 正向心理學的陪伴 App。',
+    '根據讀者的完整本命盤，為他寫一份第一次打開 App 就會被打動的深度命盤解讀。',
+    '',
+    '硬規則：',
+    '- 全部文案正向框架：可以承認困境與弱點，但結尾一定給出路與力量；不做負面斷言、不嚇人、不宿命論。',
+    '- 語氣像一個很懂他的朋友：溫暖、具體、不說教；命理術語要轉譯成白話，讓完全不懂紫微的人也讀得懂。',
+    '- 每段都要「有依據」：點到具體宮位或星曜，但用白話解釋它的意義。',
+    '- 使用繁體中文（台灣用語）。',
+    '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
+    '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
+    '',
+    '輸出 JSON 結構（全部必填）：',
+    '{',
+    '  "summary": "總論，120-180字。格局定位＋這個人的核心特質，像朋友第一次見面就說中要害的感覺",',
+    '  "dims": {',
+    '    "personality": "性格本質，80-120字。命宮＋身宮＋命主身主綜合",',
+    '    "career": "事業方向，80-120字。官祿宮為主，命宮星曜特質為輔",',
+    '    "love": "感情模式，80-120字。夫妻宮為主，描述他在關係裡的樣子與適合的相處方式",',
+    '    "money": "財運模式，80-120字。財帛宮為主，描述他與金錢的關係與累積方式",',
+    '    "social": "人際風格，80-120字。交友（僕役）宮＋遷移宮為主"',
+    '  },',
+    '  "decade": "這十年的主題，80-120字。依目前大限干支與大限四化，給這個階段的提醒與方向"',
+    '}',
+  ].join('\n');
+
+  const user = [
+    `讀者暱稱：${nickname}${gender ? `（${gender}）` : ''}`,
+    `五行局：${fiveElementsClass}｜命主：${soul}｜身主：${body}`,
+    `命宮在${mingBranch}，身宮在${bodyBranch}`,
+    '',
+    '十二宮星曜：',
+    palaceLines,
+    '',
+    decadeLine,
+    '',
+    '請產出深度命盤解讀 JSON。',
+  ].join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
 const clampInt = (v, min, max, fallback) => {
   const n = Math.round(Number(v));
   if (!Number.isFinite(n)) return fallback;
@@ -139,18 +218,27 @@ export function normalizeLlmFields(raw) {
   };
 }
 
-async function handleDaily(request, env) {
-  if (!env.MOONSHOT_API_KEY) return json({ error: 'llm_not_configured' }, 501);
+// --- 深度命盤解讀欄位正規化；總論＋至少一個維度為必要 ---
+export const CHART_DIM_KEYS = ['personality', 'career', 'love', 'money', 'social'];
 
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: 'bad_request' }, 400);
-  }
-  if (!payload || typeof payload !== 'object' || !payload.dateISO) {
-    return json({ error: 'bad_request' }, 400);
-  }
+export function normalizeChartFields(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const summary = asText(raw.summary, '');
+  if (!summary) return null;
+  const dims = raw.dims && typeof raw.dims === 'object' ? raw.dims : {};
+  const outDims = {};
+  for (const k of CHART_DIM_KEYS) outDims[k] = asText(dims[k], '');
+  if (!CHART_DIM_KEYS.some((k) => outDims[k])) return null;
+  return {
+    summary,
+    dims: outDims,
+    decade: asText(raw.decade, ''),
+  };
+}
+
+// --- Moonshot 上游呼叫（日報與命盤解讀共用）；成功回 { content }，失敗回 { error: Response } ---
+async function callMoonshot(env, messages, maxTokens) {
+  if (!env.MOONSHOT_API_KEY) return { error: json({ error: 'llm_not_configured' }, 501) };
 
   const base = (env.MOONSHOT_BASE || DEFAULT_BASE).replace(/\/$/, '');
   const model = env.MOONSHOT_MODEL || DEFAULT_MODEL;
@@ -165,31 +253,66 @@ async function handleDaily(request, env) {
       },
       body: JSON.stringify({
         model,
-        messages: buildPrompt(payload),
-        max_tokens: 1200,
+        messages,
+        max_tokens: maxTokens,
         response_format: { type: 'json_object' },
       }),
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
   } catch {
-    return json({ error: 'llm_upstream_unreachable' }, 502);
+    return { error: json({ error: 'llm_upstream_unreachable' }, 502) };
   }
 
   if (!upstream.ok) {
     const upstreamBody = await upstream.text().catch(() => '');
-    return json({ error: 'llm_upstream_error', status: upstream.status, upstreamBody: upstreamBody.slice(0, 300) }, 502);
+    return { error: json({ error: 'llm_upstream_error', status: upstream.status, upstreamBody: upstreamBody.slice(0, 300) }, 502) };
   }
 
   let data;
   try {
     data = await upstream.json();
   } catch {
-    return json({ error: 'llm_bad_response' }, 502);
+    return { error: json({ error: 'llm_bad_response' }, 502) };
   }
   const content = data && data.choices && data.choices[0] && data.choices[0].message
     ? data.choices[0].message.content
     : '';
+  return { content };
+}
+
+async function handleDaily(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object' || !payload.dateISO) {
+    return json({ error: 'bad_request' }, 400);
+  }
+
+  const { content, error } = await callMoonshot(env, buildPrompt(payload), 1200);
+  if (error) return error;
   const fields = normalizeLlmFields(extractJson(content));
+  if (!fields) return json({ error: 'llm_bad_response' }, 502);
+
+  return json(fields);
+}
+
+async function handleChartReport(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object' || !Array.isArray(payload.palaces) || payload.palaces.length !== 12) {
+    return json({ error: 'bad_request' }, 400);
+  }
+
+  const { content, error } = await callMoonshot(env, buildChartPrompt(payload), 2500);
+  if (error) return error;
+  const fields = normalizeChartFields(extractJson(content));
   if (!fields) return json({ error: 'llm_bad_response' }, 502);
 
   return json(fields);
@@ -201,6 +324,10 @@ export default {
     if (url.pathname === '/api/daily') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       return handleDaily(request, env);
+    }
+    if (url.pathname === '/api/chart-report') {
+      if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+      return handleChartReport(request, env);
     }
     if (url.pathname === '/api/health') {
       return json({ ok: true, llmConfigured: Boolean(env.MOONSHOT_API_KEY) });

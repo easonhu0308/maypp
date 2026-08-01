@@ -10,6 +10,7 @@
     "test:chart": "node scripts/test-chart.mjs",
     "test:llm": "node scripts/test-llm-daily.mjs",
     "test:reports": "node scripts/test-reports.mjs",
+    "test:chart-report": "node scripts/test-chart-report.mjs",
     "deploy": "npm run build && wrangler deploy --config dist/maypp/wrangler.json"
   },
   "dependencies": {

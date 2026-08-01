@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addCheckin, getCheckins, calcStreak } from '../lib/storage.js';
+import { maybeUpdateUserProfile } from '../lib/userProfile.js';
 import { toISODate } from '../lib/time.js';
 import TabBar from '../components/TabBar.jsx';
 import Toast, { useToast } from '../components/Toast.jsx';
@@ -22,6 +23,7 @@ export default function Checkin() {
   const submit = () => {
     if (!mood) return toast.show('先選一個今天的心情吧');
     addCheckin({ date: toISODate(), mood, emoji: MOODS[mood - 1], tags, text: text.trim() });
+    maybeUpdateUserProfile(); // 背景更新長期畫像，不阻塞導航
     navigate('/timeline');
   };
 

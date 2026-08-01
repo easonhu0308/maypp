@@ -30,6 +30,7 @@ export function buildPrompt(payload) {
     mingStars = [],
     dayGanzhi = '',
     recentCheckins = [],
+    userProfile = '',
   } = payload || {};
 
   const starText = mingStars.length ? mingStars.join('、') : '（命宮無主星，借對宮）';
@@ -50,6 +51,7 @@ export function buildPrompt(payload) {
     '硬規則：',
     '- 全部文案正向框架：可以承認疲憊與卡住，但結尾一定給出路與力量；不做負面斷言、不嚇人、不宿命論。',
     '- 語氣像一個很懂他的朋友：溫暖、具體、不說教、不堆砌命理術語；最多點到一兩個星曜特質即可。',
+    '- 若下方提供「長期畫像」，那是你對他的長期筆記：日報要自然體現你記得他的長期狀態，但不要直接引用畫像原文。',
     '- 使用繁體中文（台灣用語）。',
     '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
     '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
@@ -71,6 +73,7 @@ export function buildPrompt(payload) {
     `讀者暱稱：${nickname}${gender ? `（${gender}）` : ''}`,
     `命宮主星：${starText}`,
     `今日：${dateISO}${dayGanzhi ? `（${dayGanzhi}日）` : ''}，現在時段：${hour} 點`,
+    userProfile ? `他的長期畫像：${userProfile}` : '',
     '近 7 日打卡（新→舊）：',
     checkinLines,
     '',
@@ -189,6 +192,7 @@ export function buildAskPrompt(payload) {
     decadal = null,
     scopeInfo = null,
     recentCheckins = [],
+    userProfile = '',
   } = payload || {};
 
   const palaceLine = (p) => {
@@ -230,6 +234,7 @@ export function buildAskPrompt(payload) {
     '- 命理觀點必須「有依據」：點到對應宮位的具體星曜與四化，用白話解釋它跟這個問題的關係；嚴禁只提命宮主星就下結論。',
     '- 建議必須具體可執行，避免「順其自然」「保持正向」這種空話。',
     '- 語氣像很懂他的朋友：溫暖、直接、不說教。',
+    '- 若下方提供「長期畫像」，那是你對他的長期筆記：解讀要自然體現你記得他的長期狀態，但不要直接引用畫像原文。',
     '- 使用繁體中文（台灣用語）。',
     '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
     '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
@@ -254,6 +259,7 @@ export function buildAskPrompt(payload) {
     decadeLine,
     scopeLine('流年', scopeInfo && scopeInfo.yearly),
     scopeLine('流月', scopeInfo && scopeInfo.monthly),
+    userProfile ? `他的長期畫像：${userProfile}` : '',
     '',
     '近 7 日打卡（新→舊）：',
     checkinLines,
@@ -350,6 +356,7 @@ export function buildHoroscopePrompt(payload) {
     decadal = null,
     scopeInfo = {},
     memorySummary = null,
+    userProfile = '',
   } = payload || {};
 
   const palaceBrief = (name) => {
@@ -383,6 +390,7 @@ export function buildHoroscopePrompt(payload) {
     '- 全部文案正向框架：可以提醒注意事項，但結尾一定給出路與力量；不做負面斷言、不嚇人、不宿命論。',
     '- 解讀必須「有依據」：扣合流年/流月命宮所落的本命宮位與四化，用白話解釋意義。',
     '- 語氣像很懂他的朋友：溫暖、具體、不說教。',
+    '- 若下方提供「長期畫像」，那是你對他的長期筆記：解讀要自然體現你記得他的長期狀態，但不要直接引用畫像原文。',
     '- 使用繁體中文（台灣用語）。',
     '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
     '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
@@ -406,6 +414,7 @@ export function buildHoroscopePrompt(payload) {
     '',
     '讀者近期狀態：',
     memoryLine,
+    userProfile ? `他的長期畫像：${userProfile}` : '',
     '',
     '請產出流年/流月解讀 JSON。',
   ].filter(Boolean).join('\n');
@@ -434,6 +443,66 @@ export function normalizeHoroscopeFields(raw) {
   if (yearly) out.yearly = yearly;
   if (monthly) out.monthly = monthly;
   return out;
+}
+
+// --- 用戶偏好畫像 Prompt（滾動摘要：舊畫像＋新素材 → 新畫像） ---
+export function buildProfilePrompt(payload) {
+  const {
+    nickname = '朋友',
+    previousProfile = '',
+    recentCheckins = [],
+    recentAsks = [],
+  } = payload || {};
+
+  const checkinLines = recentCheckins.length
+    ? recentCheckins
+        .map((c) => `- ${c.date} 心情${c.mood ?? '-'}/5${(c.tags || []).length ? `［${c.tags.join('、')}］` : ''}${c.text ? `「${String(c.text).slice(0, 200)}」` : ''}`)
+        .join('\n')
+    : '（無新打卡）';
+  const askLines = recentAsks.length
+    ? recentAsks.map((a) => `- 【${a.categoryName}】${String(a.question || '（未填寫）').slice(0, 100)}`).join('\n')
+    : '（無問事紀錄）';
+
+  const system = [
+    '你是「懂你紫微」的用戶畫像筆記員——一個紫微斗數 × 正向心理學的陪伴 App。',
+    '你的工作是維護一段「長期畫像」：這是 AI 的內部筆記，幫助未來的日報與解讀越來越懂這個人。',
+    '',
+    '硬規則：',
+    '- 把「舊畫像」與「新素材」融合成一段新的畫像，不是 append，是重新提煉。',
+    '- 聚焦「穩定的特質、反覆出現的關注主題、近期的狀態走向」；捨棄一次性的瑣事與日期。',
+    '- 第二人稱（「你…」），200 字內，正向框架，不評判、不貼負面標籤。',
+    '- 使用繁體中文（台灣用語）。',
+    '- 只輸出一個 JSON 物件，不要任何多餘文字。',
+    '',
+    '輸出 JSON 結構：{ "profile": "新的長期畫像" }',
+  ].join('\n');
+
+  const user = [
+    `讀者暱稱：${nickname}`,
+    '',
+    `舊畫像：${previousProfile || '（尚無畫像，這是第一次建立）'}`,
+    '',
+    '新打卡（新→舊）：',
+    checkinLines,
+    '',
+    '最近的問事：',
+    askLines,
+    '',
+    '請產出更新後的長期畫像 JSON。',
+  ].join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+// --- 畫像欄位正規化 ---
+export function normalizeProfileFields(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const profile = asText(raw.profile, '');
+  if (!profile) return null;
+  return { profile: profile.slice(0, 400) };
 }
 
 const clampInt = (v, min, max, fallback) => {
@@ -667,6 +736,25 @@ async function handleHoroscopeReport(request, env) {
   return json(fields);
 }
 
+async function handleProfileSummary(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object') {
+    return json({ error: 'bad_request' }, 400);
+  }
+
+  const { content, error } = await callLlm(env, buildProfilePrompt(payload), 800, CHART_UPSTREAM_TIMEOUT_MS);
+  if (error) return error;
+  const fields = normalizeProfileFields(extractJson(content));
+  if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
+
+  return json(fields);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -689,6 +777,10 @@ export default {
     if (url.pathname === '/api/horoscope-report') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       return handleHoroscopeReport(request, env);
+    }
+    if (url.pathname === '/api/profile-summary') {
+      if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+      return handleProfileSummary(request, env);
     }
     if (url.pathname === '/api/health') {
       return json({

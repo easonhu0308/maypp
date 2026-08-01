@@ -14,6 +14,7 @@
     "test:ask-report": "node scripts/test-ask-report.mjs",
     "test:horoscope": "node scripts/test-horoscope.mjs",
     "test:profile": "node scripts/test-profile.mjs",
+    "test:auspicious": "node scripts/test-auspicious.mjs",
     "deploy": "npm run build && wrangler deploy --config dist/maypp/wrangler.json"
   },
   "dependencies": {

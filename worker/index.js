@@ -178,6 +178,98 @@ export function buildChartPrompt(payload) {
   ];
 }
 
+// --- 問事報告 Prompt（完整命盤＋問題＋對應宮位＋近期打卡，嚴格 JSON 輸出） ---
+export function buildAskPrompt(payload) {
+  const {
+    nickname = '朋友',
+    categoryName = '問事',
+    categoryPalace = '命宮',
+    question = '',
+    palaces = [],
+    decadal = null,
+    recentCheckins = [],
+  } = payload || {};
+
+  const palaceLine = (p) => {
+    if (!p) return '（無資料）';
+    const major = (p.major || []).join('、') || '（無主星）';
+    const minor = (p.minor || []).join('、');
+    const mut = (p.mutagens || []).join('、');
+    let s = `主星：${major}`;
+    if (minor) s += `，輔雜曜：${minor}`;
+    if (mut) s += `，四化：${mut}`;
+    return s;
+  };
+  const focusPalace = palaces.find((p) => p.name === categoryPalace) || palaces.find((p) => p.name === '命宮');
+
+  const checkinLines = recentCheckins.length
+    ? recentCheckins
+        .map((c) => `- ${c.date} 心情${c.mood ?? '-'}/5 ${c.emoji || ''}${(c.tags || []).length ? `［${c.tags.join('、')}］` : ''}${c.text ? `「${String(c.text).slice(0, 200)}」` : ''}`)
+        .join('\n')
+    : '（近 7 日無打卡）';
+
+  const decadeLine = decadal
+    ? `目前大限：${decadal.stem}${decadal.branch}限（虛歲 ${decadal.range[0]}–${decadal.range[1]} 歲）`
+    : '（大限資料未提供）';
+
+  const system = [
+    '你是「懂你紫微」的問事解讀師——一個紫微斗數 × 正向心理學的陪伴 App。',
+    '讀者帶著一個具體問題來，你要結合他的本命盤（特別是與問題對應的宮位）、目前大限與近期狀態，給出一份「有推理過程」的建議。',
+    '',
+    '硬規則：',
+    '- 全部文案正向框架：可以承認困境，但結尾一定給出路；不做負面斷言、不嚇人、不宿命論。',
+    '- 命理觀點必須「有依據」：點到對應宮位的具體星曜與四化，用白話解釋它跟這個問題的關係；嚴禁只提命宮主星就下結論。',
+    '- 建議必須具體可執行，避免「順其自然」「保持正向」這種空話。',
+    '- 語氣像很懂他的朋友：溫暖、直接、不說教。',
+    '- 使用繁體中文（台灣用語）。',
+    '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
+    '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
+    '',
+    '輸出 JSON 結構（全部必填）：',
+    '{',
+    '  "astrology": "命理觀點，120-180字。從對應宮位的星曜組合與四化推理這個問題的結構，最後扣回問題本身給方向",',
+    '  "memory": "從最近狀態來看，60-100字。若下方有打卡，點名回應最近一件相關的事；無打卡則扣合他的星曜特質寫一段理解他的話",',
+    '  "actions": ["具體行動建議一，30字內", "建議二，30字內", "建議三，30字內"]',
+    '}',
+  ].join('\n');
+
+  const user = [
+    `讀者暱稱：${nickname}`,
+    `問題領域：${categoryName}（對應宮位：${categoryPalace}）`,
+    `他的問題：${question || '（未填寫，給這個領域的近期指引）'}`,
+    '',
+    `【${categoryPalace}宮】${palaceLine(focusPalace)}`,
+    `【命宮】${palaceLine(palaces.find((p) => p.name === '命宮'))}`,
+    `【身宮所在】${palaceLine(palaces.find((p) => p.isBody))}`,
+    decadeLine,
+    '',
+    '近 7 日打卡（新→舊）：',
+    checkinLines,
+    '',
+    '請產出問事解讀 JSON。',
+  ].join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+// --- 問事報告欄位正規化；命理觀點＋至少一則行動為必要 ---
+export function normalizeAskFields(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const astrology = asText(raw.astrology, '');
+  if (!astrology) return null;
+  let actions = Array.isArray(raw.actions) ? raw.actions.map((a) => asText(a, '')).filter(Boolean) : [];
+  actions = actions.slice(0, 3);
+  if (actions.length === 0) return null;
+  return {
+    astrology,
+    memory: asText(raw.memory, ''),
+    actions,
+  };
+}
+
 const clampInt = (v, min, max, fallback) => {
   const n = Math.round(Number(v));
   if (!Number.isFinite(n)) return fallback;
@@ -348,6 +440,25 @@ async function handleChartReport(request, env) {
   return json(fields);
 }
 
+async function handleAskReport(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object' || !Array.isArray(payload.palaces) || payload.palaces.length !== 12) {
+    return json({ error: 'bad_request' }, 400);
+  }
+
+  const { content, error } = await callLlm(env, buildAskPrompt(payload), 1500, CHART_UPSTREAM_TIMEOUT_MS);
+  if (error) return error;
+  const fields = normalizeAskFields(extractJson(content));
+  if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
+
+  return json(fields);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -358,6 +469,10 @@ export default {
     if (url.pathname === '/api/chart-report') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       return handleChartReport(request, env);
+    }
+    if (url.pathname === '/api/ask-report') {
+      if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+      return handleAskReport(request, env);
     }
     if (url.pathname === '/api/health') {
       return json({

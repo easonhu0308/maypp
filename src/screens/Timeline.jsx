@@ -79,6 +79,15 @@ export default function Timeline() {
         </div>
       </div>
 
+      <div className="card mt16 center" style={{ borderColor: 'rgba(216,181,128,.35)', background: 'rgba(216,181,128,.07)' }}>
+        <h3>✦ 接下來呢？</h3>
+        <p style={{ fontSize: 14, color: 'var(--ink-dim)', lineHeight: 1.7, marginTop: 4 }}>
+          把今天的心情記下來，或對命盤問一件具體的事，讓明天的日報更懂你。
+        </p>
+        <Link className="btn btn-gold mt8" to="/checkin">今日 30 秒打卡 ☀</Link>
+        <Link className="btn btn-ghost mt8" to="/ask">對命盤問一件事 →</Link>
+      </div>
+
       <div className="card mt16 center" style={{ borderStyle: 'dashed' }}>
         <p style={{ color: 'var(--ink-dim)' }}>🌱 完整「月度回顧報告」製作中：心情 × 運勢 × 行動的交叉分析，上線後一樣免費</p>
       </div>

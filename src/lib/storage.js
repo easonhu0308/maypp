@@ -68,6 +68,16 @@ export function getReportById(id) {
   return getReports().find((r) => r.id === id) || null;
 }
 
+// 合併更新單一報告欄位（例如 LLM 版欄位回來後覆寫本地模板內容）
+export function updateReport(id, patch) {
+  const reports = getReports();
+  const idx = reports.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  reports[idx] = { ...reports[idx], ...patch, id };
+  saveReports(reports);
+  return reports[idx];
+}
+
 // --- 匯出 / 刪除 ---
 export function exportAllData() {
   return {

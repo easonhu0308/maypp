@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getReports } from '../lib/storage.js';
+import { getProfile, getReports, getSettings, recentCheckins, updateReport } from '../lib/storage.js';
 import { ASK_CATEGORIES } from '../lib/daily.js';
+import { fetchLlmAskReport } from '../lib/llmAsk.js';
 import TabBar from '../components/TabBar.jsx';
 
 const categoryLabel = (key) => {
@@ -16,6 +17,32 @@ export default function ReportDetail() {
   const report = useMemo(() => {
     return reports.find((r) => r.id === reportId) || null;
   }, [reports, reportId]);
+
+  // 本地模板報告先秒開；背景取 LLM 深度版，回來後無縫替換並存回 localStorage
+  const [llmFields, setLlmFields] = useState(null);
+  const [upgrading, setUpgrading] = useState(false);
+
+  useEffect(() => {
+    if (!report || report.source === 'llm') return;
+    if (getSettings().aiDaily === false) return;
+    let alive = true;
+    setUpgrading(true);
+    const category = ASK_CATEGORIES[report.category] || { name: '問事', palace: '命宮' };
+    fetchLlmAskReport({
+      profile: getProfile(),
+      category,
+      question: report.question,
+      recent: recentCheckins(7),
+    }).then((fields) => {
+      if (!alive) return;
+      if (fields) {
+        updateReport(report.id, fields);
+        setLlmFields(fields);
+      }
+      setUpgrading(false);
+    });
+    return () => { alive = false; };
+  }, [report]);
 
   if (!report) {
     return (
@@ -52,20 +79,28 @@ export default function ReportDetail() {
         <p className="lead" style={{ margin: 0 }}>{report.question}</p>
       </div>
 
+      {upgrading && (
+        <div className="card" style={{ borderStyle: 'dashed' }}>
+          <p className="lead" style={{ fontSize: 13, margin: 0 }}>
+            ✨ AI 正在細讀你的命盤與問題，深度解讀約需 15–30 秒，會自動更新下方內容…
+          </p>
+        </div>
+      )}
+
       <div className="card">
-        <h3>🔮 命理觀點</h3>
-        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{report.astrology}</p>
+        <h3>🔮 命理觀點{(report.source === 'llm' || llmFields) ? ' · AI' : ''}</h3>
+        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{llmFields?.astrology || report.astrology}</p>
       </div>
 
       <div className="card">
         <h3>💭 從你最近的狀態來看</h3>
-        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{report.memory}</p>
+        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{llmFields?.memory || report.memory}</p>
       </div>
 
       <div className="card">
         <h3>🌿 可以怎麼做</h3>
         <ol style={{ paddingLeft: 18, margin: 0, fontSize: 14, lineHeight: 1.8 }}>
-          {report.actions.map((a, i) => (
+          {(llmFields?.actions || report.actions).map((a, i) => (
             <li key={i}>{a}</li>
           ))}
         </ol>

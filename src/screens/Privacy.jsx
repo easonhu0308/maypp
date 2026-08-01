@@ -15,9 +15,9 @@ import Toast, { useToast } from '../components/Toast.jsx';
 
 const TOGGLES = [
   { key: 'personalize', title: '個人化內容生成', sub: '使用打卡與測驗資料讓日報更貼近你' },
-  { key: 'aiDaily', title: 'AI 雲端日報', sub: '命盤主星與打卡摘要會傳到雲端（Moonshot Kimi）生成日報；關閉則完全離線' },
-  { key: 'push', title: '每日運勢推播', sub: '每天 08:00，可調整或關閉' },
-  { key: 'stats', title: '匿名統計改善服務', sub: '僅彙總數據，不含可識別內容' },
+  { key: 'aiDaily', title: 'AI 雲端日報', sub: '命盤主星與打卡摘要會傳到雲端 AI 生成日報；關閉則完全離線' },
+  { key: 'push', title: '每日運勢推播', sub: '每天 08:00，可調整或關閉', soon: true },
+  { key: 'stats', title: '匿名統計改善服務', sub: '僅彙總數據，不含可識別內容', soon: true },
 ];
 
 export default function Privacy() {
@@ -34,6 +34,11 @@ export default function Privacy() {
   const joinDays = Math.max(1, daysBetween(profile.createdAt, toISODate()) + 1);
 
   const toggle = (key) => {
+    const t = TOGGLES.find((x) => x.key === key);
+    if (t && t.soon) {
+      toast.show('即將推出，敬請期待 ✦');
+      return;
+    }
     const next = { ...settings, [key]: !settings[key] };
     setSettings(next);
     saveSettings(next);
@@ -86,8 +91,16 @@ export default function Privacy() {
         <h3>我的資料，我做主</h3>
         {TOGGLES.map((t) => (
           <div className="row" key={t.key}>
-            <div>{t.title}<div className="sub">{t.sub}</div></div>
-            <div className={`switch${settings[t.key] ? ' on' : ''}`} onClick={() => toggle(t.key)}></div>
+            <div>
+              {t.title}
+              {t.soon && <span className="tag" style={{ marginLeft: 8 }}>即將推出</span>}
+              <div className="sub">{t.sub}</div>
+            </div>
+            <div
+              className={`switch${settings[t.key] && !t.soon ? ' on' : ''}`}
+              style={t.soon ? { opacity: 0.35 } : undefined}
+              onClick={() => toggle(t.key)}
+            ></div>
           </div>
         ))}
       </div>

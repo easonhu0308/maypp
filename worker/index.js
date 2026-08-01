@@ -505,6 +505,79 @@ export function normalizeProfileFields(raw) {
   return { profile: profile.slice(0, 400) };
 }
 
+// --- 擇日 Prompt（本地掃描的前 3 天＋命理依據，LLM 寫成有溫度的理由） ---
+export function buildAuspiciousPrompt(payload) {
+  const {
+    nickname = '朋友',
+    activityName = '重要的事',
+    days = [],
+    userProfile = '',
+  } = payload || {};
+
+  const dayLines = days
+    .map((d) => `- ${d.date}（${d.ganzhi}日）：${(d.hits || []).join('；') || '流日能量平穩'}`)
+    .join('\n');
+
+  const system = [
+    '你是「懂你紫微」的擇日顧問——一個紫微斗數 × 正向心理學的陪伴 App。',
+    '我們已經用命理規則從未來 30 天掃出最適合某件事的 3 天，你要把每一天寫成溫暖、具體的推薦理由。',
+    '',
+    '硬規則：',
+    '- 全部文案正向框架：說「這幾天更適合」，不說「哪天大凶不能去」；不嚇人、不宿命論。',
+    '- 理由必須扣合提供的命理依據（流日命宮落宮、四化），用白話解釋，不堆砌術語。',
+    '- 語氣像很懂他的朋友：溫暖、具體、像幫他挑日子的好朋友。',
+    '- 若下方提供「長期畫像」，推薦語氣可自然貼近他的狀態，但不要直接引用畫像原文。',
+    '- 使用繁體中文（台灣用語）。',
+    '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
+    '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
+    '',
+    '輸出 JSON 結構（全部必填）：',
+    '{',
+    '  "intro": "開場一句話，40字內，點出這段時間挑日子的重點",',
+    '  "days": [',
+    '    { "date": "YYYY-MM-DD（必須與輸入完全一致）", "title": "這天的一句話主題，8字內", "reason": "推薦理由，60-90字" }',
+    '  ],',
+    '  "note": "收尾提醒，40字內，正向框架",',
+    '}',
+  ].join('\n');
+
+  const user = [
+    `讀者暱稱：${nickname}`,
+    `他想安排的事：${activityName}`,
+    '',
+    '掃描出的好日子（依推薦排序）：',
+    dayLines,
+    '',
+    userProfile ? `他的長期畫像：${userProfile}` : '',
+    '',
+    '請產出擇日推薦 JSON。',
+  ].filter(Boolean).join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+// --- 擇日欄位正規化：intro＋至少一天有 date+reason ---
+export function normalizeAuspiciousFields(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const intro = asText(raw.intro, '');
+  if (!intro) return null;
+  const days = Array.isArray(raw.days)
+    ? raw.days
+        .map((d) => ({
+          date: asText(d && d.date, ''),
+          title: asText(d && d.title, ''),
+          reason: asText(d && d.reason, ''),
+        }))
+        .filter((d) => d.date && d.reason)
+        .slice(0, 3)
+    : [];
+  if (days.length === 0) return null;
+  return { intro, days, note: asText(raw.note, '') };
+}
+
 const clampInt = (v, min, max, fallback) => {
   const n = Math.round(Number(v));
   if (!Number.isFinite(n)) return fallback;
@@ -755,6 +828,25 @@ async function handleProfileSummary(request, env) {
   return json(fields);
 }
 
+async function handleAuspicious(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: 'bad_request' }, 400);
+  }
+  if (!payload || typeof payload !== 'object' || !Array.isArray(payload.days) || payload.days.length === 0) {
+    return json({ error: 'bad_request' }, 400);
+  }
+
+  const { content, error } = await callLlm(env, buildAuspiciousPrompt(payload), 1200, CHART_UPSTREAM_TIMEOUT_MS);
+  if (error) return error;
+  const fields = normalizeAuspiciousFields(extractJson(content));
+  if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
+
+  return json(fields);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -781,6 +873,10 @@ export default {
     if (url.pathname === '/api/profile-summary') {
       if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
       return handleProfileSummary(request, env);
+    }
+    if (url.pathname === '/api/auspicious') {
+      if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+      return handleAuspicious(request, env);
     }
     if (url.pathname === '/api/health') {
       return json({

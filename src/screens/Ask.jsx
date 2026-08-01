@@ -94,6 +94,7 @@ export default function Ask() {
         </div>
 
         <button type="submit" className="btn btn-gold">生成懂我報告</button>
+        <Link className="btn btn-ghost mt8" to="/auspicious" style={{ fontSize: 13, padding: 12 }}>想挑日子？掃描未來 30 天 📅</Link>
         <p className="disclaimer">內容為自我探索與娛樂用途</p>
       </form>
 

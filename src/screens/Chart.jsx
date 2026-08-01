@@ -192,6 +192,7 @@ export default function Chart() {
       )}
 
       <Link className="btn btn-gold" to="/today">下一步：看看今天的日報 →</Link>
+      <Link className="btn btn-ghost mt8" to="/auspicious" style={{ fontSize: 13, padding: 12 }}>挑個好日子 📅</Link>
       <Link className="btn btn-ghost mt8" to="/reports" style={{ fontSize: 13, padding: 12 }}>查看問事報告</Link>
       <Link className="btn btn-ghost mt8" to="/ask" style={{ fontSize: 13, padding: 12 }}>針對命盤問一件事 ✦</Link>
       <p className="disclaimer">內容為自我探索與娛樂用途</p>

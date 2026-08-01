@@ -261,8 +261,9 @@ async function callMoonshot(env, messages, maxTokens, timeoutMs = UPSTREAM_TIMEO
       }),
       signal: AbortSignal.timeout(timeoutMs),
     });
-  } catch {
-    return { error: json({ error: 'llm_upstream_unreachable' }, 502) };
+  } catch (err) {
+    const msg = err && err.message ? String(err.message) : String(err);
+    return { error: json({ error: 'llm_upstream_unreachable', detail: msg.slice(0, 200) }, 502) };
   }
 
   if (!upstream.ok) {

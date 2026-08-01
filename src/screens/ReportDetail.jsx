@@ -180,7 +180,7 @@ export default function ReportDetail() {
               onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
               placeholder="針對這份報告再問一句…"
             />
-            <button type="button" className="btn btn-gold" style={{ padding: '10px 16px' }} onClick={handleSend} disabled={!canSend}>
+            <button type="button" className="btn btn-gold" style={{ padding: '10px 16px', width: 'auto', flexShrink: 0 }} onClick={handleSend} disabled={!canSend}>
               送出
             </button>
           </div>

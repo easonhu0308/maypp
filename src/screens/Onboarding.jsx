@@ -14,6 +14,27 @@ export default function Onboarding() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeData, setAgreeData] = useState(false);
   const [agreePush, setAgreePush] = useState(false);
+  const [goals, setGoals] = useState([]);
+
+  const GOAL_OPTIONS = [
+    '穩定情緒',
+    '改善睡眠',
+    '工作方向',
+    '關係理解',
+    '財務規劃',
+    '自我認識',
+  ];
+
+  const toggleGoal = (g) => {
+    setGoals((prev) => {
+      if (prev.includes(g)) return prev.filter((x) => x !== g);
+      if (prev.length >= 3) {
+        toast.show('最多選 3 個目標，先把心力集中在一小段時間。');
+        return prev;
+      }
+      return [...prev, g];
+    });
+  };
 
   const submit = () => {
     if (!solarDate) return toast.show('請選擇出生日期');
@@ -27,6 +48,7 @@ export default function Onboarding() {
       // iztro 需要二元性別以排大限順逆；「其他／不透露」以「男」計算
       gender: genderRaw === '女' ? '女' : '男',
       consents: { terms: agreeTerms, data: agreeData, push: agreePush },
+      goals,
       createdAt: toISODate(),
     });
     navigate('/chart');
@@ -95,7 +117,23 @@ export default function Onboarding() {
       </div>
 
       <div className="card">
-        <h3>② 你的同意，我們說清楚</h3>
+        <h3>② 你想先懂什麼？（選填）</h3>
+        <p className="mb16">選 1-3 個，我們會優先從這些角度陪你。</p>
+        <div className="chips" style={{ marginBottom: 6 }}>
+          {GOAL_OPTIONS.map((g) => (
+            <span
+              key={g}
+              className={`chip${goals.includes(g) ? ' on' : ''}`}
+              onClick={() => toggleGoal(g)}
+            >
+              {g}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>③ 你的同意，我們說清楚</h3>
         <div className="checkrow mt8">
           <input type="checkbox" id="c1" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} />
           <label htmlFor="c1">我已閱讀並同意<a>《服務條款》</a>與<a>《隱私權政策》</a>，了解出生資料屬於個人資料，僅用於排盤與內容生成。</label>

@@ -1,45 +1,84 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { getProfile, getCheckins } from '../lib/storage.js';
-import { formatDots, toISODate } from '../lib/time.js';
+import React, { useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { getReports } from '../lib/storage.js';
+import { ASK_CATEGORIES } from '../lib/daily.js';
 import TabBar from '../components/TabBar.jsx';
 
+const categoryLabel = (key) => {
+  const c = ASK_CATEGORIES[key];
+  return c ? `${c.icon} ${c.name}` : '🔮 問事';
+};
+
 export default function ReportDetail() {
-  const profile = getProfile();
-  const checkinCount = getCheckins().length;
+  const [searchParams] = useSearchParams();
+  const reportId = searchParams.get('id');
+  const reports = useMemo(() => getReports(), []);
+  const report = useMemo(() => {
+    return reports.find((r) => r.id === reportId) || null;
+  }, [reports, reportId]);
+
+  if (!report) {
+    return (
+      <div className="app">
+        <div className="page-head">
+          <div className="eyebrow">REPORT</div>
+          <h1>懂我報告</h1>
+        </div>
+        <div className="card center" style={{ borderStyle: 'dashed' }}>
+          <p className="lead">還沒有報告</p>
+          <Link className="btn btn-gold mt8" to="/ask">去問一件事 ✦</Link>
+        </div>
+        <TabBar active="reports" />
+      </div>
+    );
+  }
+
+  const dateStr = new Date(report.createdAt).toLocaleDateString('zh-Hant', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="app">
       <div className="page-head">
         <div className="eyebrow">REPORT</div>
-        <h1>💞 感情深度解析</h1>
-        <p>{profile.nickname}專屬 · 依 {formatDots(toISODate())} 的命盤與近況生成 · 約 6,000 字</p>
+        <h1>{categoryLabel(report.category)}報告</h1>
+        <p>{dateStr} · 問題：{report.question}</p>
       </div>
 
-      <div className="card glow">
-        <h3>第一章 · 你愛人的方式</h3>
-        <p className="lead">你的夫妻宮坐貪狼，命宮卻是天機太陰——這是一組很迷人的矛盾：內心渴望深刻而專一的連結，表現出來的卻常常是「好像都可以」。你不是不在意，是太怕給別人添麻煩，於是把在意藏得很深。</p>
-        <p className="mt8">上個月你打卡說「不知道他在想什麼」。其實盤上看得清楚：你需要的是「被明確選擇」的安全感，而你給出的訊號，卻常常模糊到對方讀不懂……</p>
-      </div>
-
-      <div className="card">
-        <h3>第二至六章 · 製作中，一樣免費</h3>
-        <p>你的親密關係盲點、下半年桃花節奏、與不同主星類型的相處攻略、給你的三個練習。</p>
-        <p className="note mt8">完整六章將在 AI 生成引擎接上後自動解鎖，到時候回來就能免費看完整版。</p>
+      <div className="card" style={{ borderColor: 'rgba(139,92,246,.35)', background: 'rgba(139,92,246,.08)' }}>
+        <h3>問題</h3>
+        <p className="lead" style={{ margin: 0 }}>{report.question}</p>
       </div>
 
       <div className="card">
-        <h3>這份報告怎麼來的？</h3>
-        <p>① 你的本命盤：夫妻宮、福德宮、紅鸞天喜位置<br />② 你的性格測驗：高敏感 × 高謹慎的依附傾向<br />③ 你這些日子以來的打卡：{checkinCount} 則心情與生活紀錄</p>
+        <h3>🔮 命理觀點</h3>
+        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{report.astrology}</p>
       </div>
 
-      <div className="card center glow">
-        <div className="price">免費 <small>· 朋友版 · 永久保存</small></div>
-        <p className="mt8" style={{ fontSize: 12.5 }}>打卡越多次，報告越懂你</p>
-        <Link className="btn btn-gold mt8" to="/checkin">先去打卡 30 秒 ✦</Link>
+      <div className="card">
+        <h3>💭 從你最近的狀態來看</h3>
+        <p className="lead" style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{report.memory}</p>
       </div>
 
-      <p className="disclaimer">內容為自我探索與娛樂用途 · 不構成感情或心理諮詢建議</p>
+      <div className="card">
+        <h3>🌿 可以怎麼做</h3>
+        <ol style={{ paddingLeft: 18, margin: 0, fontSize: 14, lineHeight: 1.8 }}>
+          {report.actions.map((a, i) => (
+            <li key={i}>{a}</li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="card" style={{ background: 'rgba(216,181,128,.07)' }}>
+        <p className="small" style={{ margin: 0 }}>這份報告結合了你的本命盤與近期打卡，內容為自我探索與娛樂用途，不構成醫療、心理治療或投資建議。</p>
+      </div>
+
+      <Link className="btn btn-ghost" to="/reports" style={{ marginBottom: 10 }}>← 返回報告列表</Link>
+      <Link className="btn btn-gold" to="/ask">再問一件事 ✦</Link>
+
+      <p className="disclaimer">內容為自我探索與娛樂用途</p>
 
       <TabBar active="reports" />
     </div>

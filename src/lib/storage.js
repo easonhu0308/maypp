@@ -4,6 +4,7 @@ import { toISODate, parseISODate } from './time.js';
 const KEY_PROFILE = 'ziwei.profile';
 const KEY_CHECKINS = 'ziwei.checkins';
 const KEY_SETTINGS = 'ziwei.settings';
+const KEY_REPORTS = 'ziwei.reports';
 
 function read(key, fallback) {
   try {
@@ -48,6 +49,25 @@ export function saveSettings(settings) {
   write(KEY_SETTINGS, settings);
 }
 
+// --- 問事報告 ---
+export function getReports() {
+  return read(KEY_REPORTS, []);
+}
+
+export function saveReports(reports) {
+  write(KEY_REPORTS, reports);
+}
+
+export function addReport(report) {
+  const list = [report, ...getReports()].slice(0, 50);
+  write(KEY_REPORTS, list);
+  return list;
+}
+
+export function getReportById(id) {
+  return getReports().find((r) => r.id === id) || null;
+}
+
 // --- 匯出 / 刪除 ---
 export function exportAllData() {
   return {
@@ -56,6 +76,7 @@ export function exportAllData() {
     profile: getProfile(),
     checkins: getCheckins(),
     settings: getSettings(),
+    reports: getReports(),
   };
 }
 
@@ -63,6 +84,7 @@ export function clearAllData() {
   localStorage.removeItem(KEY_PROFILE);
   localStorage.removeItem(KEY_CHECKINS);
   localStorage.removeItem(KEY_SETTINGS);
+  localStorage.removeItem(KEY_REPORTS);
 }
 
 // 近 N 天的打卡（含今天，新的在前）

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>懂你紫微 v2 互動 Mockup</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; padding:20px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#0a0a10; color:#f3effa; }
+  h1 { font-size:18px; color:#d4b5ff; margin-bottom:6px; }
+  .intro { color:#9e92b3; font-size:13px; margin-bottom:18px; }
+  .phone-frame { width:360px; height:720px; margin:0 auto; background:#12121c; border:8px solid #2a2a3a; border-radius:36px; overflow:hidden; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; padding:20px 16px 70px; overflow-y:auto; }
+  .screen:target { display:flex; }
+  #welcome { display:flex; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .title { font-size:17px; font-weight:700; color:#f3effa; }
+  .subtitle { font-size:12px; color:#9e92b3; }
+  .card { background:#1e1e2d; border:1px solid #2f2f45; border-radius:16px; padding:16px; margin-bottom:14px; }
+  .card-purple { border-color:#6b4aa6; background:#231834; }
+  .chip { display:inline-block; background:#2a2a40; color:#d4b5ff; border:1px solid #4a3a6e; border-radius:20px; padding:6px 12px; font-size:12px; margin:4px 4px 4px 0; }
+  .btn { display:block; width:100%; padding:14px; border-radius:12px; text-align:center; font-weight:700; text-decoration:none; margin-top:12px; }
+  .btn-primary { background:#8b5cf6; color:#fff; }
+  .btn-secondary { background:#2a2a40; color:#d4b5ff; border:1px solid #4a3a6e; }
+  .energy { display:flex; align-items:center; gap:12px; }
+  .energy-ring { width:72px; height:72px; border-radius:50%; border:8px solid #4a3a6e; border-top-color:#8b5cf6; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; }
+  .muted { color:#8d829f; font-size:12px; }
+  .tabbar { position:absolute; bottom:0; left:0; right:0; height:60px; background:#181824; border-top:1px solid #2f2f45; display:flex; justify-content:space-around; align-items:center; font-size:11px; }
+  .tabbar a { color:#8d829f; text-decoration:none; text-align:center; }
+  .tabbar a.active { color:#d4b5ff; }
+  .palace-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .palace { background:#1e1e2d; border:1px solid #2f2f45; border-radius:8px; height:80px; padding:6px; font-size:11px; display:flex; flex-direction:column; justify-content:space-between; }
+  .palace.active { border-color:#8b5cf6; background:#231834; }
+  .form-group { margin-bottom:14px; }
+  label { display:block; font-size:12px; color:#9e92b3; margin-bottom:6px; }
+  input, select, textarea { width:100%; background:#181824; border:1px solid #2f2f45; color:#f3effa; padding:10px; border-radius:10px; }
+  .options { display:flex; flex-wrap:wrap; gap:8px; }
+  .option { background:#181824; border:1px solid #2f2f45; border-radius:10px; padding:8px 12px; font-size:12px; color:#9e92b3; }
+  .option.selected { border-color:#8b5cf6; color:#d4b5ff; background:#231834; }
+  .report-item { background:#181824; border:1px solid #2f2f45; border-radius:12px; padding:12px; margin-bottom:10px; }
+  .mood { font-size:28px; }
+  .section-title { font-size:14px; font-weight:700; color:#d4b5ff; margin-bottom:8px; }
+  .big { font-size:22px; font-weight:700; color:#f3effa; }
+  .small { font-size:11px; color:#8d829f; }
+</style>
+</head>
+<body>
+<h1>懂你紫微 v2 · 互動 Mockup</h1>
+<p class="intro">點擊畫面中的按鈕切換頁面。建議開新視窗放大觀看。</p>
+
+<div class="phone-frame">
+
+<!-- Welcome -->
+<div class="screen" id="welcome" style="justify-content:center; text-align:center;">
+  <div style="margin-bottom:40px;">
+    <div class="big" style="font-size:42px; margin-bottom:8px;">✦</div>
+    <div class="big">懂你紫微</div>
+    <p class="muted">每個人都有自己的星圖。<br>我們一起慢慢讀懂它。</p>
+  </div>
+  <a class="btn btn-primary" href="#onboarding">開始認識自己</a>
+  <p class="small" style="margin-top:20px;">資料存在你的手機，內容僅供自我探索與娛樂。</p>
+</div>
+
+<!-- Onboarding -->
+<div class="screen" id="onboarding">
+  <div class="topbar"><div class="title">建立命盤</div><div class="subtitle">1 / 3</div></div>
+  <div class="form-group"><label>暱稱</label><input value="小紫"></div>
+  <div class="form-group"><label>國曆生日</label><input type="date" value="1994-06-18"></div>
+  <div class="form-group"><label>出生時間</label><select><option>辰時 07:00-09:00</option></select></div>
+  <div class="form-group"><label>性別（用於命盤運算）</label>
+    <div class="options"><span class="option selected">女</span><span class="option">男</span><span class="option">不透露</span></div>
+  </div>
+  <a class="btn btn-primary" href="#onboarding2">下一步</a>
+</div>
+
+<div class="screen" id="onboarding2">
+  <div class="topbar"><div class="title">你想先懂什麼？</div><div class="subtitle">2 / 3</div></div>
+  <p class="muted">選 1-3 個，我們會優先從這些角度陪你。</p>
+  <div class="options" style="margin-top:12px;">
+    <span class="option selected">穩定情緒</span>
+    <span class="option">工作方向</span>
+    <span class="option selected">關係理解</span>
+    <span class="option">財務規劃</span>
+    <span class="option">自我認識</span>
+    <span class="option">改善睡眠</span>
+  </div>
+  <a class="btn btn-secondary" href="#onboarding">上一步</a>
+  <a class="btn btn-primary" href="#onboarding3">下一步</a>
+</div>
+
+<div class="screen" id="onboarding3">
+  <div class="topbar"><div class="title">同意與隱私</div><div class="subtitle">3 / 3</div></div>
+  <div class="card">
+    <p>為了讓建議更貼近你，我們需要：</p>
+    <label style="display:flex; gap:8px; margin:10px 0;"><input type="checkbox" checked> 使用命盤與打卡做個人化內容</label>
+    <label style="display:flex; gap:8px; margin:10px 0;"><input type="checkbox" checked> 呼叫 AI 產生每日日報與問事報告</label>
+    <label style="display:flex; gap:8px; margin:10px 0;"><input type="checkbox"> 匿名協助改善產品體驗</label>
+  </div>
+  <a class="btn btn-secondary" href="#onboarding2">上一步</a>
+  <a class="btn btn-primary" href="#today">完成，進入今日頁</a>
+</div>
+
+<!-- Today -->
+<div class="screen" id="today">
+  <div class="topbar"><div><div class="title">早安，小紫</div><div class="subtitle">丙午日 · 火六局</div></div><div class="mood">🌤</div></div>
+
+  <div class="card card-purple">
+    <div class="section-title">今天為什麼是這樣</div>
+    <p style="font-size:14px; line-height:1.6; margin:0;">今日流日走到你的<span style="color:#d4b5ff;">事業宮</span>，宮內有<span style="color:#d4b5ff;">廉貞、破軍</span>，代表適合主動出擊、但不適合硬碰硬。</p>
+  </div>
+
+  <div class="card">
+    <div class="energy">
+      <div class="energy-ring">78</div>
+      <div>
+        <div class="section-title">今日能量</div>
+        <p class="muted" style="margin:0;">流日引動事業宮 + 近 7 日心情平穩</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">三維指引</div>
+    <div style="margin-bottom:8px;"><strong style="color:#d4b5ff;">事業：</strong>上午適合推進，下午留給協調。</div>
+    <div style="margin-bottom:8px;"><strong style="color:#d4b5ff;">感情：</strong>避免用工作語氣溝通，晚間比較柔軟。</div>
+    <div><strong style="color:#d4b5ff;">財運：</strong>衝動消費前等 10 分鐘。</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">宜做</div>
+    <span class="chip">主動發訊息</span><span class="chip">整理桌面</span><span class="chip">走路 10 分鐘</span>
+    <div style="margin-top:10px;"><span class="small">幸運色：霧藍 · 數字：3 · 方位：東南</span></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">給你的一句話</div>
+    <p style="margin:0; font-size:14px; line-height:1.6;">「你前幾天標了『工作卡關』，今天能量回升，正好是釐清優先順序的好日子。」</p>
+  </div>
+
+  <a class="btn btn-primary" href="#checkin">今天過得如何？</a>
+
+  <div class="tabbar">
+    <a class="active" href="#today">今日</a>
+    <a href="#chart">命盤</a>
+    <a href="#ask">問事</a>
+    <a href="#timeline">時間軸</a>
+    <a href="#profile">我的</a>
+  </div>
+</div>
+
+<!-- Check-in -->
+<div class="screen" id="checkin">
+  <div class="topbar"><div class="title">今天過得如何？</div></div>
+  <div class="card" style="text-align:center;">
+    <div class="mood" style="font-size:48px;">🙂</div>
+    <p class="muted">還可以</p>
+  </div>
+  <div class="card">
+    <div class="section-title">今天哪些標籤最貼近你？</div>
+    <span class="chip">工作卡關</span><span class="chip">睡不飽</span><span class="chip">人際和諧</span>
+    <span class="chip">有進展</span><span class="chip">情緒穩定</span><span class="chip">想花錢</span>
+  </div>
+  <div class="form-group"><label>想說的話（選填）</label><textarea rows="3" placeholder="今天發生了什麼..."></textarea></div>
+  <a class="btn btn-primary" href="#today">記錄完成，回今日頁</a>
+</div>
+
+<!-- Chart -->
+<div class="screen" id="chart">
+  <div class="topbar"><div class="title">小紫的命盤</div><div class="subtitle">火六局 · 太陽巨門坐命</div></div>
+  <div class="card card-purple" style="text-align:center;">
+    <div class="section-title">一句話看懂你的格局</div>
+    <p style="margin:0; font-size:15px;">「發光也要被聽見」—— 你習慣用專業撐起場面，但真正的力量來自把想法說清楚。</p>
+  </div>
+  <div class="palace-grid">
+    <div class="palace active"><span>巳 遷移</span><span>紫微 七殺</span></div>
+    <div class="palace"><span>午 疾厄</span><span>—</span></div>
+    <div class="palace"><span>未 財帛</span><span>—</span></div>
+    <div class="palace"><span>申 子女</span><span>天府</span></div>
+    <div class="palace"><span>辰 夫妻</span><span>天機 天梁</span></div>
+    <div class="palace"><span>酉 僕役</span><span>—</span></div>
+    <div class="palace"><span>卯 兄弟</span><span>天相</span></div>
+    <div class="palace"><span>戌 官祿</span><span>廉貞 破軍</span></div>
+    <div class="palace"><span>寅 命宮</span><span style="color:#d4b5ff;">太陽 巨門</span></div>
+    <div class="palace"><span>丑 父母</span><span>—</span></div>
+    <div class="palace"><span>子 福德</span><span>武曲 貪狼</span></div>
+    <div class="palace"><span>亥 田宅</span><span>天同 太陰</span></div>
+  </div>
+  <div style="margin:14px 0;">
+    <a class="btn btn-primary" href="#chart-detail">查看命宮詳解</a>
+    <a class="btn btn-secondary" href="#ask">針對命盤問一件事</a>
+  </div>
+  <div class="tabbar">
+    <a href="#today">今日</a>
+    <a class="active" href="#chart">命盤</a>
+    <a href="#ask">問事</a>
+    <a href="#timeline">時間軸</a>
+    <a href="#profile">我的</a>
+  </div>
+</div>
+
+<div class="screen" id="chart-detail">
+  <div class="topbar"><div class="title">命宮 · 太陽巨門</div></div>
+  <div class="card">
+    <div class="section-title">主星特質</div>
+    <p style="font-size:14px; line-height:1.6; margin:0;">太陽熱情、巨門深思。這組合讓你對「說服」與「理解」都有高標準，容易想太多而延遲行動。</p>
+  </div>
+  <div class="card">
+    <div class="section-title">身心靈提醒</div>
+    <p style="font-size:14px; line-height:1.6; margin:0;">當你感覺「講了也沒人懂」時，先寫下來再說。你的思緒需要一個出口，而不是即時被回應。</p>
+  </div>
+  <a class="btn btn-secondary" href="#chart">回命盤</a>
+</div>
+
+<!-- Ask -->
+<div class="screen" id="ask">
+  <div class="topbar"><div class="title">問一件事</div></div>
+  <p class="muted">選擇領域，我會結合你的命盤與最近狀態給建議。</p>
+  <a class="btn btn-secondary" href="#ask-form" style="text-align:left; margin-bottom:8px;">💼 事業方向</a>
+  <a class="btn btn-secondary" href="#ask-form" style="text-align:left; margin-bottom:8px;">❤️ 感情關係</a>
+  <a class="btn btn-secondary" href="#ask-form" style="text-align:left; margin-bottom:8px;">💰 財運決策</a>
+  <a class="btn btn-secondary" href="#ask-form" style="text-align:left; margin-bottom:8px;">🏃 健康作息</a>
+  <a class="btn btn-secondary" href="#ask-form" style="text-align:left; margin-bottom:8px;">👥 人際互動</a>
+  <a class="btn btn-secondary" href="#ask-form" style="text-align:left;">📅 年度運勢</a>
+  <div class="tabbar">
+    <a href="#today">今日</a>
+    <a href="#chart">命盤</a>
+    <a class="active" href="#ask">問事</a>
+    <a href="#timeline">時間軸</a>
+    <a href="#profile">我的</a>
+  </div>
+</div>
+
+<div class="screen" id="ask-form">
+  <div class="topbar"><div class="title">問：事業</div></div>
+  <div class="form-group"><label>具體一點的問題（選填）</label><textarea rows="4" placeholder="例如：這週適合跟主管提案嗎？"></textarea></div>
+  <div class="card">
+    <div class="section-title">會參考的資訊</div>
+    <p class="muted" style="margin:0;">命宮主星：太陽巨門<br>流日宮位：事業宮（廉貞、破軍）<br>近 7 日標籤：工作卡關 x2、有進展 x1</p>
+  </div>
+  <a class="btn btn-primary" href="#report-detail">生成懂我報告</a>
+</div>
+
+<!-- Report -->
+<div class="screen" id="report-detail">
+  <div class="topbar"><div class="title">懂我報告</div><div class="subtitle">事業 · 2026/08/01</div></div>
+  <div class="card card-purple">
+    <div class="section-title">問題</div>
+    <p style="margin:0;">這週適合跟主管提案嗎？</p>
+  </div>
+  <div class="card">
+    <div class="section-title">命理觀點</div>
+    <p class="muted" style="margin:0;">你的命宮主星太陽巨門擅長說理，但容易準備過多。本週事業宮有廉貞、破軍，代表「主動出擊、但不適合硬碰硬」。</p>
+  </div>
+  <div class="card">
+    <div class="section-title">從你最近的狀態來看</div>
+    <p class="muted" style="margin:0;">近 7 天你有 2 次標「工作卡關」，顯示你對現況已有想法但還沒說出口。這週能量回升，是把卡住點講出來的時機。</p>
+  </div>
+  <div class="card">
+    <div class="section-title">可以怎麼做</div>
+    <ol class="muted" style="padding-left:18px; margin:0;">
+      <li>週二上午找主管，先給 3 個選項而不是單一答案。</li>
+      <li>把「風險」改成「我們可以怎麼準備」。</li>
+      <li>如果當天主管很忙，不要硬談，延到週四。</li>
+    </ol>
+  </div>
+  <a class="btn btn-secondary" href="#reports">看所有報告</a>
+</div>
+
+<div class="screen" id="reports">
+  <div class="topbar"><div class="title">問事紀錄</div></div>
+  <a class="report-item" href="#report-detail">
+    <div style="color:#d4b5ff; font-weight:700;">這週適合跟主管提案嗎？</div>
+    <div class="small">事業 · 2026/08/01</div>
+  </a>
+  <a class="report-item" href="#report-detail">
+    <div style="color:#d4b5ff; font-weight:700;">最近的人際壓力從哪來？</div>
+    <div class="small">人際 · 2026/07/28</div>
+  </a>
+  <a class="btn btn-primary" href="#ask">再問一件事</a>
+  <div class="tabbar">
+    <a href="#today">今日</a>
+    <a href="#chart">命盤</a>
+    <a class="active" href="#reports">問事</a>
+    <a href="#timeline">時間軸</a>
+    <a href="#profile">我的</a>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="screen" id="timeline">
+  <div class="topbar"><div class="title">時間軸</div></div>
+  <div class="card card-purple">
+    <div class="section-title">越來越懂你</div>
+    <p style="margin:0; font-size:14px;">你最近有 2 天標「工作卡關」，建議你看看「事業」問事報告，釐清是方法問題還是溝通問題。</p>
+  </div>
+  <div class="card">
+    <div class="section-title">8 月</div>
+    <div style="display:flex; gap:8px; font-size:20px; margin-top:6px;">🙂 😐 🙂</div>
+    <p class="small">心情趨於平穩，工作卡關出現 2 次。</p>
+  </div>
+  <div class="report-item">
+    <div class="small">2026/08/01 · 今日日報</div>
+    <div style="font-size:14px;">能量 78，事業宮受流日引動。</div>
+  </div>
+  <div class="report-item">
+    <div class="small">2026/07/31 · 打卡</div>
+    <div style="font-size:14px;">🙂 有進展</div>
+  </div>
+  <div class="tabbar">
+    <a href="#today">今日</a>
+    <a href="#chart">命盤</a>
+    <a href="#reports">問事</a>
+    <a class="active" href="#timeline">時間軸</a>
+    <a href="#profile">我的</a>
+  </div>
+</div>
+
+<!-- Profile -->
+<div class="screen" id="profile">
+  <div class="topbar"><div class="title">我的</div></div>
+  <div class="card" style="text-align:center;">
+    <div class="big" style="font-size:32px;">小紫</div>
+    <p class="muted">1994/06/18 辰時<br>火六局 · 太陽巨門坐命</p>
+  </div>
+  <div class="card">
+    <div class="section-title">身心靈目標</div>
+    <span class="chip">穩定情緒</span><span class="chip">關係理解</span>
+  </div>
+  <div class="card">
+    <div class="section-title">設定</div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #2f2f45;"><span>個人化內容</span><span style="color:#8b5cf6;">開啟</span></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #2f2f45;"><span>AI 雲端日報</span><span style="color:#8b5cf6;">開啟</span></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #2f2f45;"><span>推播提醒</span><span style="color:#8d829f;">關閉</span></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0;"><span>匿名統計</span><span style="color:#8d829f;">關閉</span></div>
+  </div>
+  <a class="btn btn-secondary" href="#">匯出我的資料</a>
+  <a class="btn btn-secondary" href="#" style="margin-top:8px;">刪除所有資料</a>
+  <div class="tabbar">
+    <a href="#today">今日</a>
+    <a href="#chart">命盤</a>
+    <a href="#reports">問事</a>
+    <a href="#timeline">時間軸</a>
+    <a class="active" href="#profile">我的</a>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

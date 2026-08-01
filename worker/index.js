@@ -31,6 +31,7 @@ export function buildPrompt(payload) {
     dayGanzhi = '',
     recentCheckins = [],
     userProfile = '',
+    dailyInfo = null,
   } = payload || {};
 
   const starText = mingStars.length ? mingStars.join('、') : '（命宮無主星，借對宮）';
@@ -52,6 +53,7 @@ export function buildPrompt(payload) {
     '- 全部文案正向框架：可以承認疲憊與卡住，但結尾一定給出路與力量；不做負面斷言、不嚇人、不宿命論。',
     '- 語氣像一個很懂他的朋友：溫暖、具體、不說教、不堆砌命理術語；最多點到一兩個星曜特質即可。',
     '- 若下方提供「長期畫像」，那是你對他的長期筆記：日報要自然體現你記得他的長期狀態，但不要直接引用畫像原文。',
+    '- 「reasoning」要扣合下方提供的流日資料（流日命宮落宮與流日四化），白話解釋為什麼今天容易有某種感覺；若未提供流日，扣合日柱干支即可。',
     '- 使用繁體中文（台灣用語）。',
     '- 內容為自我探索與娛樂用途，不提供醫療、心理治療或投資建議。',
     '- 只輸出一個 JSON 物件，不要任何多餘文字、不要 markdown 圍欄。',
@@ -61,6 +63,7 @@ export function buildPrompt(payload) {
     '  "dayKeyword": "適合…的一天，10 字內",',
     '  "score": 60 到 95 的整數（今日能量，維持正向區間）,',
     '  "lead": "今日總覽，60 字內",',
+    '  "reasoning": "今天為什麼是這樣，60-100 字。扣流日命宮落宮與流日四化，解釋他今天容易有的感受（順或卡都正向框架）",',
     '  "dims": { "career": 55-98 整數, "love": 55-98 整數, "money": 55-98 整數 },',
     '  "advice": "今日行動建議，80 字內，具體可執行",',
     '  "yi": ["宜：…", "宜：…", "宜：…"]（各 8 字內）,',
@@ -73,6 +76,9 @@ export function buildPrompt(payload) {
     `讀者暱稱：${nickname}${gender ? `（${gender}）` : ''}`,
     `命宮主星：${starText}`,
     `今日：${dateISO}${dayGanzhi ? `（${dayGanzhi}日）` : ''}，現在時段：${hour} 點`,
+    dailyInfo && Array.isArray(dailyInfo.mutagen) && dailyInfo.mutagen.length === 4
+      ? `流日命宮落在本命「${dailyInfo.soulNatalPalace}」宮，流日四化：${dailyInfo.mutagen[0]}化祿、${dailyInfo.mutagen[1]}化權、${dailyInfo.mutagen[2]}化科、${dailyInfo.mutagen[3]}化忌`
+      : '',
     userProfile ? `他的長期畫像：${userProfile}` : '',
     '近 7 日打卡（新→舊）：',
     checkinLines,
@@ -602,6 +608,7 @@ export function normalizeLlmFields(raw) {
   while (yi.length < 3) yi.push('宜：對自己溫柔一點');
 
   const lucky = raw.lucky && typeof raw.lucky === 'object' ? raw.lucky : {};
+  const reasoning = asText(raw.reasoning, '');
   return {
     dayKeyword: asText(raw.dayKeyword, '適合好好過的一天'),
     score: clampInt(raw.score, 60, 95, 77),
@@ -619,6 +626,8 @@ export function normalizeLlmFields(raw) {
       number: clampInt(lucky.number, 1, 9, 7),
       direction: asText(lucky.direction, '東'),
     },
+    // reasoning 有值才帶出，避免空字串覆蓋前端本地版
+    ...(reasoning ? { reasoning } : {}),
   };
 }
 

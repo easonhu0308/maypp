@@ -58,6 +58,19 @@ export function lunarDateShort(astrolabe) {
   return String(astrolabe.lunarDate || '').replace(/^.+?年/, '');
 }
 
+// 流日資訊：今日干支、流日命宮落本命哪一宮、流日四化（送日報 prompt 解釋「為什麼今天有這種感覺」）
+export function buildDailyInfo(profile, now = new Date()) {
+  const astrolabe = buildAstrolabe(profile);
+  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const daily = astrolabe.horoscope(iso).daily;
+  return {
+    stem: daily.heavenlyStem,
+    branch: daily.earthlyBranch,
+    soulNatalPalace: displayPalaceName(astrolabe.palaces[daily.index].name),
+    mutagen: daily.mutagen,
+  };
+}
+
 // 流年/流月 payload：本命盤＋指定 scope 的干支、四化、命宮落宮
 // scope: 'yearly' | 'monthly'；iztro palaceNames[i] 對應 palaces[i]，index 即該 scope 命宮位置
 export function buildHoroscopePayload(profile, scope, now = new Date()) {

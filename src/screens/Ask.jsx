@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { getProfile, getCheckins, recentCheckins, addReport } from '../lib/storage.js';
+import { getProfile, getReports, recentCheckins, addReport } from '../lib/storage.js';
 import { buildAstrolabe, getMingStarNames } from '../lib/astro.js';
 import { buildAskReport, ASK_CATEGORIES } from '../lib/daily.js';
+import ReportList from '../components/ReportList.jsx';
 import TabBar from '../components/TabBar.jsx';
 
 const CATEGORIES = Object.entries(ASK_CATEGORIES).map(([key, v]) => ({
@@ -22,6 +23,7 @@ export default function Ask() {
   const initialCategory = searchParams.get('category') || 'career';
   const [category, setCategory] = useState(CATEGORIES.some((c) => c.key === initialCategory) ? initialCategory : 'career');
   const [question, setQuestion] = useState('');
+  const reports = useMemo(() => getReports(), []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -98,7 +100,19 @@ export default function Ask() {
         <p className="disclaimer">內容為自我探索與娛樂用途</p>
       </form>
 
-      <TabBar active="reports" />
+      {reports.length > 0 && (
+        <div className="mt16">
+          <h3 style={{ marginBottom: 10 }}>❖ 我的報告庫</h3>
+          <ReportList reports={reports} limit={3} />
+          {reports.length > 3 && (
+            <Link className="btn btn-ghost" to="/reports" style={{ fontSize: 13, padding: 12 }}>
+              查看全部 {reports.length} 份報告 →
+            </Link>
+          )}
+        </div>
+      )}
+
+      <TabBar active="ask" />
     </div>
   );
 }

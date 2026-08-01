@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 const TABS = [
   { to: '/today', icon: '☀', label: '今日', key: 'today' },
-  { to: '/chart', icon: '✦', label: '命盤', key: 'chart' },
-  { to: '/reports', icon: '❖', label: '報告', key: 'reports' },
+  { to: '/chart', icon: '✦', label: '運勢', key: 'chart' },
+  { to: '/ask', icon: '❖', label: '問事', key: 'ask' },
   { to: '/timeline', icon: '🌙', label: '時間軸', key: 'timeline' },
   { to: '/privacy', icon: '☺', label: '我的', key: 'privacy' },
 ];

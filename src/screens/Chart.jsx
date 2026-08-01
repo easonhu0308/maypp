@@ -85,6 +85,11 @@ export default function Chart() {
     ? (deep.dims[dim] ? dim : (DIM_TABS.find((t) => deep.dims[t.key]) || {}).key)
     : dim;
 
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="app">
       <div className="page-head">
@@ -97,7 +102,13 @@ export default function Chart() {
         </p>
       </div>
 
-      <div className="chart mb16">
+      <div className="chips mb16">
+        <button type="button" className="chip" onClick={() => scrollTo('sec-chart')}>本命</button>
+        <button type="button" className="chip" onClick={() => scrollTo('sec-pattern')}>格局</button>
+        <button type="button" className="chip" onClick={() => scrollTo('sec-fortune')}>運程</button>
+      </div>
+
+      <div className="chart mb16" id="sec-chart">
         {CHART_ORDER.map((branch) =>
           branch === 'C' ? (
             <div key="center" className="chart-center">
@@ -118,11 +129,12 @@ export default function Chart() {
         )}
       </div>
 
-      <div className="card glow">
-        <h3>✦ 一句話看懂你的格局</h3>
-        <p className="lead">{describePattern(mingStars)}</p>
-        {!deep && <p className="mt8">這只是命盤的千分之一。完整的十二宮解析、大限流年走向，都在深度報告裡。</p>}
-      </div>
+      <div id="sec-pattern">
+        <div className="card glow">
+          <h3>✦ 一句話看懂你的格局</h3>
+          <p className="lead">{describePattern(mingStars)}</p>
+          {!deep && <p className="mt8">這只是命盤的千分之一。完整的十二宮解析、大限流年走向，都在深度報告裡。</p>}
+        </div>
 
       {!deep && deepLoading && (
         <div className="card" style={{ borderStyle: 'dashed' }}>
@@ -155,14 +167,16 @@ export default function Chart() {
             </div>
             <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.dims[shownDim]}</p>
           </div>
-
-          {deep.decade && (
-            <div className="card" style={{ borderColor: 'rgba(216,181,128,.35)', background: 'rgba(216,181,128,.07)' }}>
-              <h3>🌊 這十年的主題</h3>
-              <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.decade}</p>
-            </div>
-          )}
         </>
+      )}
+      </div>
+
+      <div id="sec-fortune">
+      {deep && deep.decade && (
+        <div className="card" style={{ borderColor: 'rgba(216,181,128,.35)', background: 'rgba(216,181,128,.07)' }}>
+          <h3>🌊 這十年的主題</h3>
+          <p className="lead" style={{ fontSize: 14, lineHeight: 1.8 }}>{deep.decade}</p>
+        </div>
       )}
 
       {!horo && horoLoading && (
@@ -190,6 +204,7 @@ export default function Chart() {
           )}
         </div>
       )}
+      </div>
 
       <Link className="btn btn-gold" to="/today">下一步：看看今天的日報 →</Link>
       <Link className="btn btn-ghost mt8" to="/auspicious" style={{ fontSize: 13, padding: 12 }}>挑個好日子 📅</Link>

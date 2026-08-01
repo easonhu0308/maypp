@@ -90,7 +90,7 @@ export default function ReportDetail() {
           <p className="lead">還沒有報告</p>
           <Link className="btn btn-gold mt8" to="/ask">去問一件事 ✦</Link>
         </div>
-        <TabBar active="reports" />
+        <TabBar active="ask" />
       </div>
     );
   }
@@ -198,7 +198,7 @@ export default function ReportDetail() {
 
       <p className="disclaimer">內容為自我探索與娛樂用途</p>
 
-      <TabBar active="reports" />
+      <TabBar active="ask" />
     </div>
   );
 }

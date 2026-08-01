@@ -122,7 +122,7 @@ export default function Auspicious() {
       <Link className="btn btn-ghost mt8" to="/ask" style={{ fontSize: 13, padding: 12 }}>想用問的？對命盤問一件事 →</Link>
       <p className="disclaimer">內容為自我探索與娛樂用途</p>
 
-      <TabBar active="chart" />
+      <TabBar active="ask" />
     </div>
   );
 }

@@ -1,13 +1,8 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getReports } from '../lib/storage.js';
-import { ASK_CATEGORIES } from '../lib/daily.js';
+import ReportList from '../components/ReportList.jsx';
 import TabBar from '../components/TabBar.jsx';
-
-const categoryLabel = (key) => {
-  const c = ASK_CATEGORIES[key];
-  return c ? `${c.icon} ${c.name}` : '🔮 問事';
-};
 
 export default function Reports() {
   const reports = useMemo(() => getReports(), []);
@@ -29,13 +24,7 @@ export default function Reports() {
       ) : (
         <>
           <Link className="btn btn-gold" to="/ask" style={{ marginBottom: 16 }}>再問一件事 ✦</Link>
-          {reports.map((r) => (
-            <Link key={r.id} className="card" to={`/report-detail?id=${r.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', marginBottom: 12 }}>
-              <div style={{ fontSize: 12, color: '#9e92b3', marginBottom: 4 }}>{categoryLabel(r.category)} · {new Date(r.createdAt).toLocaleDateString('zh-Hant')}{r.source === 'llm' ? ' · AI' : ''}</div>
-              <div style={{ fontWeight: 700, color: '#d4b5ff', marginBottom: 6 }}>{r.question}</div>
-              <div className="muted" style={{ fontSize: 13, lineHeight: 1.5 }}>{r.astrology.slice(0, 60)}…</div>
-            </Link>
-          ))}
+          <ReportList reports={reports} />
         </>
       )}
 
@@ -46,7 +35,7 @@ export default function Reports() {
 
       <p className="disclaimer">內容為自我探索與娛樂用途</p>
 
-      <TabBar active="reports" />
+      <TabBar active="ask" />
     </div>
   );
 }

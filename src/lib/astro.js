@@ -57,3 +57,49 @@ export function getYinYang(astrolabe) {
 export function lunarDateShort(astrolabe) {
   return String(astrolabe.lunarDate || '').replace(/^.+?年/, '');
 }
+
+// 深度命盤解讀 payload：完整十二宮星曜＋目前大限，送 Worker /api/chart-report
+export function buildChartPayload(profile, now = new Date()) {
+  const astrolabe = buildAstrolabe(profile);
+  const palaces = astrolabe.palaces.map((p) => ({
+    name: displayPalaceName(p.name),
+    branch: p.earthlyBranch,
+    major: p.majorStars.map((s) => s.name),
+    minor: [...p.minorStars, ...p.adjectiveStars].map((s) => s.name),
+    mutagens: [...p.majorStars, ...p.minorStars, ...p.adjectiveStars]
+      .filter((s) => s.mutagen)
+      .map((s) => `${s.name}化${s.mutagen}`),
+    isBody: Boolean(p.isBodyPalace),
+  }));
+
+  // 目前大限：以虛歲找 range 涵蓋的宮位，再取 horoscope 的大限干支與四化
+  const birthYear = Number(String(profile.solarDate).slice(0, 4));
+  const nominalAge = now.getFullYear() - birthYear + 1;
+  const decadePalace = astrolabe.palaces.find(
+    (p) => p.decadal && nominalAge >= p.decadal.range[0] && nominalAge <= p.decadal.range[1]
+  );
+  let decadal = null;
+  if (decadePalace) {
+    const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const h = astrolabe.horoscope(iso);
+    decadal = {
+      stem: h.decadal.heavenlyStem,
+      branch: h.decadal.earthlyBranch,
+      range: decadePalace.decadal.range,
+      nominalAge,
+      mutagen: h.decadal.mutagen,
+    };
+  }
+
+  return {
+    nickname: profile.nickname,
+    gender: profile.genderRaw || profile.gender || '',
+    fiveElementsClass: astrolabe.fiveElementsClass,
+    soul: astrolabe.soul,
+    body: astrolabe.body,
+    mingBranch: astrolabe.earthlyBranchOfSoulPalace,
+    bodyBranch: astrolabe.earthlyBranchOfBodyPalace,
+    palaces,
+    decadal,
+  };
+}

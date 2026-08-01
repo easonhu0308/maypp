@@ -8,6 +8,8 @@
 const DEFAULT_BASE = 'https://api.moonshot.ai/v1';
 const DEFAULT_MODEL = 'kimi-k2.5';
 const UPSTREAM_TIMEOUT_MS = 25000;
+// 深度命盤解讀 prompt 大（十二宮全文＋2500 tokens），Kimi 生成常超過 25 秒，獨立放寬到 60 秒
+export const CHART_UPSTREAM_TIMEOUT_MS = 60000;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -237,7 +239,7 @@ export function normalizeChartFields(raw) {
 }
 
 // --- Moonshot 上游呼叫（日報與命盤解讀共用）；成功回 { content }，失敗回 { error: Response } ---
-async function callMoonshot(env, messages, maxTokens) {
+async function callMoonshot(env, messages, maxTokens, timeoutMs = UPSTREAM_TIMEOUT_MS) {
   if (!env.MOONSHOT_API_KEY) return { error: json({ error: 'llm_not_configured' }, 501) };
 
   const base = (env.MOONSHOT_BASE || DEFAULT_BASE).replace(/\/$/, '');
@@ -257,7 +259,7 @@ async function callMoonshot(env, messages, maxTokens) {
         max_tokens: maxTokens,
         response_format: { type: 'json_object' },
       }),
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch {
     return { error: json({ error: 'llm_upstream_unreachable' }, 502) };
@@ -310,7 +312,7 @@ async function handleChartReport(request, env) {
     return json({ error: 'bad_request' }, 400);
   }
 
-  const { content, error } = await callMoonshot(env, buildChartPrompt(payload), 2500);
+  const { content, error } = await callMoonshot(env, buildChartPrompt(payload), 2500, CHART_UPSTREAM_TIMEOUT_MS);
   if (error) return error;
   const fields = normalizeChartFields(extractJson(content));
   if (!fields) return json({ error: 'llm_bad_response' }, 502);

@@ -8,7 +8,8 @@ import { getSettings } from './storage.js';
 import { buildChartPayload } from './astro.js';
 
 const CACHE_KEY = 'ziwei.chartLLM';
-const FETCH_TIMEOUT_MS = 20000;
+// 必須大於 worker 的 CHART_UPSTREAM_TIMEOUT_MS（60s），否則上游還在生成前端就先放棄
+export const FETCH_TIMEOUT_MS = 70000;
 
 // 輸入簽名：命盤由生日＋時辰＋性別決定，改名不影響內容但一併納入避免混用
 // v1：prompt 或欄位結構改版時遞增，讓舊快取自動失效

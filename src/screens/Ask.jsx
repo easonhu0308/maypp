@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getProfile, getReports, recentCheckins, addReport } from '../lib/storage.js';
 import { buildAstrolabe, getMingStarNames } from '../lib/astro.js';
 import { buildAskReport, ASK_CATEGORIES } from '../lib/daily.js';

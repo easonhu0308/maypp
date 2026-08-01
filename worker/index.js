@@ -10,6 +10,8 @@ const DEFAULT_MODEL = 'kimi-k2.5';
 const UPSTREAM_TIMEOUT_MS = 60000;
 // 深度命盤解讀 prompt 大（十二宮全文＋2500 tokens），Kimi 生成常超過 25 秒，獨立放寬到 60 秒
 export const CHART_UPSTREAM_TIMEOUT_MS = 60000;
+// 線上首選上游：Cloudflare Workers AI（Moonshot/Kimi 的閘道會封 serverless 出口，見 README）
+const WORKERS_AI_MODEL = '@cf/qwen/qwen3-30b-a3b-fp8';
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -238,8 +240,33 @@ export function normalizeChartFields(raw) {
   };
 }
 
-// --- Moonshot 上游呼叫（日報與命盤解讀共用）；成功回 { content }，失敗回 { error: Response } ---
-async function callMoonshot(env, messages, maxTokens, timeoutMs = UPSTREAM_TIMEOUT_MS) {
+// --- LLM 上游呼叫（日報與命盤解讀共用）；成功回 { content }，失敗回 { error: Response } ---
+// 有 AI binding（Workers AI）優先走它：沒有出口封鎖問題、免費額度內、延遲低。
+// 無 binding 時走 Moonshot HTTP（本機開發 / 自架情境）。
+async function callLlm(env, messages, maxTokens, timeoutMs = UPSTREAM_TIMEOUT_MS) {
+  if (env.AI) {
+    try {
+      const out = await env.AI.run(WORKERS_AI_MODEL, { messages, max_tokens: maxTokens });
+      // 回應形狀全吃：純字串 / { response: 字串 } / { response: { choices } } / OpenAI 式 { choices }
+      let content = '';
+      if (typeof out === 'string') content = out;
+      else if (out && typeof out.response === 'string') content = out.response;
+      else if (out && out.response && Array.isArray(out.response.choices)) {
+        content = (out.response.choices[0] && out.response.choices[0].message && out.response.choices[0].message.content) || '';
+      } else if (out && Array.isArray(out.choices)) {
+        content = (out.choices[0] && out.choices[0].message && out.choices[0].message.content) || '';
+      }
+      if (!content) {
+        const shape = out && typeof out === 'object' ? `keys:${Object.keys(out).join(',')}` : typeof out;
+        return { error: json({ error: 'llm_bad_response', backend: 'workers-ai', shape }, 502) };
+      }
+      return { content };
+    } catch (err) {
+      const msg = err && err.message ? String(err.message) : String(err);
+      return { error: json({ error: 'llm_upstream_unreachable', backend: 'workers-ai', detail: msg.slice(0, 200) }, 502) };
+    }
+  }
+
   if (!env.MOONSHOT_API_KEY) return { error: json({ error: 'llm_not_configured' }, 501) };
 
   const base = (env.MOONSHOT_BASE || DEFAULT_BASE).replace(/\/$/, '');
@@ -294,10 +321,10 @@ async function handleDaily(request, env) {
     return json({ error: 'bad_request' }, 400);
   }
 
-  const { content, error } = await callMoonshot(env, buildPrompt(payload), 1200);
+  const { content, error } = await callLlm(env, buildPrompt(payload), 1200);
   if (error) return error;
   const fields = normalizeLlmFields(extractJson(content));
-  if (!fields) return json({ error: 'llm_bad_response' }, 502);
+  if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
 
   return json(fields);
 }
@@ -313,10 +340,10 @@ async function handleChartReport(request, env) {
     return json({ error: 'bad_request' }, 400);
   }
 
-  const { content, error } = await callMoonshot(env, buildChartPrompt(payload), 2500, CHART_UPSTREAM_TIMEOUT_MS);
+  const { content, error } = await callLlm(env, buildChartPrompt(payload), 2500, CHART_UPSTREAM_TIMEOUT_MS);
   if (error) return error;
   const fields = normalizeChartFields(extractJson(content));
-  if (!fields) return json({ error: 'llm_bad_response' }, 502);
+  if (!fields) return json({ error: 'llm_bad_response', raw: (content || '').slice(0, 200) }, 502);
 
   return json(fields);
 }
@@ -333,7 +360,11 @@ export default {
       return handleChartReport(request, env);
     }
     if (url.pathname === '/api/health') {
-      return json({ ok: true, llmConfigured: Boolean(env.MOONSHOT_API_KEY) });
+      return json({
+        ok: true,
+        llmConfigured: Boolean(env.AI || env.MOONSHOT_API_KEY),
+        llmBackend: env.AI ? 'workers-ai' : env.MOONSHOT_API_KEY ? 'moonshot-http' : 'none',
+      });
     }
     return env.ASSETS.fetch(request);
   },

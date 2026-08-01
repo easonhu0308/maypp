@@ -15,6 +15,9 @@
     "MOONSHOT_MODEL": "kimi-k2.6",
     "MOONSHOT_BASE": "https://api.moonshot.ai/v1"
   },
+  "ai": {
+    "binding": "AI"
+  },
   "compatibility_flags": [
     "nodejs_compat"
   ]
